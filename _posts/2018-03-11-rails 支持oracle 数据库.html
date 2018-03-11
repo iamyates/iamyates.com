@@ -1,0 +1,90 @@
+<p>参考：（看第一个答案的时候，记得看我下面的注释）<a href="https://stackoverflow.com/questions/764887/how-to-configure-ruby-on-rails-with-oracle">https://stackoverflow.com/questions/764887/how-to-configure-ruby-on-rails-with-oracle</a>
+</p>
+<p>1. 下载oracle相关的开发文件和sdk: 　来这里：<a href="https://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html">https://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html</a>
+</p>
+<p>这里要注意，选择　对应的平台和ＣＰＵ类型．例如，　for Linux-x86-64 就是当前主流cpu（６４位), 以及 Linux操作系统.</p>
+<p><img src="/system/images/W1siZiIsIjIwMTcvMDUvMjUvMTdfMDZfMDdfNzhfU2NyZWVuc2hvdF9mcm9tXzIwMTdfMDVfMjVfMTdfMDBfNDhfc2VsZWN0X2Zvcl9saW51eC5wbmciXV0/Screenshot%20from%202017-05-25%2017-00-48-select-for-linux.png" title="Screenshot From 2017 05 25 17 00 48 Select For Linux" alt="Screenshot From 2017 05 25 17 00 48 Select For Linux" rel="225x255" width="810" height="349" /></p>
+<p>2. 进来之后,会看到这个页面, 记得要先选择"Accept" (在页面上方位置), 接受条款.&#160;</p>
+<p>然后点击" ...sdk " 和 "... basic" 两个zip文件.</p>
+<p>（分别对应　Base ...&#160; &#160;和　　Development and Runtime) 如下图所示：</p>
+<img src="http://showmethemoney.sweetysoft.com/install-oracle-client.png" />
+<p>下载时要记得注册Oracle账号. 否则无法下载.</p>
+<p><img src="/system/images/W1siZiIsIjIwMTcvMDUvMjUvMTdfMDVfNDdfNzQxX1NjcmVlbnNob3RfZnJvbV8yMDE3XzA1XzI1XzE3XzAwXzEwX3NlbGVjdF9maWxlcy5wbmciXV0/Screenshot%20from%202017-05-25%2017-00-10-select_files.png" title="Screenshot From 2017 05 25 17 00 10 Select Files" alt="Screenshot From 2017 05 25 17 00 10 Select Files" rel="225x255" width="593" height="873" /></p>
+<p>3. 解压缩 zip 文件, 可以看到文件都解压缩到文件夹:  instantclient_12_2 &#160;下了, 然后建立 soft link:&#160;</p>
+<p>(这句话很重要) &#160; &#160; $ ln -s libclntsh.so.12.1 libclntsh.so &#160; ( so 文件后缀是linux的, 如果在mac下,就是 dylib )&#160;</p>
+<p>同时,在上面的页面, 要下载 xxx-sql-plus 文件. 也一样解压缩即可.&#160;</p>
+<p>上面3个文件解压缩之后, 文件都存在与 同一个文件夹下面,例如:&#160;</p>
+<p>/workspace/coding_tools/instantclient_12_2</p>
+<pre>drwxrwxr-x  3 siwei siwei      4096 5月  25 18:09 .
+drwxrwxr-x 12 siwei siwei      4096 5月  25 18:09 ..
+-rwxrwxr-x  1 siwei siwei     44220 1月  26 05:14 adrci
+-rw-rw-r--  1 siwei siwei       363 1月  26 05:14 BASIC_README
+-rwxrwxr-x  1 siwei siwei     57272 1月  26 05:14 genezi
+-r-xr-xr-x  1 siwei siwei       342 1月  26 05:14 glogin.sql
+-rwxrwxr-x  1 siwei siwei   8033199 1月  26 05:14 libclntshcore.so.12.1
+lrwxrwxrwx  1 siwei siwei        17 5月  25 17:36 libclntsh.so -&gt; libclntsh.so.12.1
+-rwxrwxr-x  1 siwei siwei  71638263 1月  26 05:14 libclntsh.so.12.1
+-r-xr-xr-x  1 siwei siwei   2981501 1月  26 05:14 libipc1.so
+-r-xr-xr-x  1 siwei siwei    539065 1月  26 05:14 libmql1.so
+-r-xr-xr-x  1 siwei siwei   6568149 1月  26 05:14 libnnz12.so
+-rwxrwxr-x  1 siwei siwei   2218687 1月  26 05:14 libocci.so.12.1
+-rwxrwxr-x  1 siwei siwei 124771800 1月  26 05:14 libociei.so
+-r-xr-xr-x  1 siwei siwei    158543 1月  26 05:14 libocijdbc12.so
+-r-xr-xr-x  1 siwei siwei    380996 1月  26 05:14 libons.so
+-rwxrwxr-x  1 siwei siwei    116563 1月  26 05:14 liboramysql12.so
+-r-xr-xr-x  1 siwei siwei   1641005 1月  26 05:14 libsqlplusic.so
+-r-xr-xr-x  1 siwei siwei   1559466 1月  26 05:14 libsqlplus.so
+-r--r--r--  1 siwei siwei   4036257 1月  26 05:14 ojdbc8.jar
+drwxrwxr-x  5 siwei siwei      4096 1月  26 05:14 sdk
+-r-xr-xr-x  1 siwei siwei     22751 1月  26 05:14 sqlplus
+-rw-rw-r--  1 siwei siwei       367 1月  26 05:14 SQLPLUS_README
+-rwxrwxr-x  1 siwei siwei    240476 1月  26 05:14 uidrvci
+-rw-rw-r--  1 siwei siwei     74230 1月  26 05:14 xstreams.jar
+</pre>
+<p>设置 &#160;变量:&#160;export LD_LIBRARY_PATH=/workspace/coding_tools/instantclient_12_2</p>
+<p>放到 ~/.bashrc 文件中, 重新进入terminal&#160;</p>
+<p>4. 开始安装oci8 &#160;, 参考: &#160; <a href="http://www.rubydoc.info/github/kubo/ruby-oci8/file/docs/install-instant-client.md">http://www.rubydoc.info/github/kubo/ruby-oci8/file/docs/install-instant-client.md</a>
+</p>
+<p>$ gem install&#160;ruby-oci8</p>
+<p>5. 安装 相关的Gem:&#160;</p>
+<p>I was using rails 4.1.x, Gemfile:
+</p>
+<pre>gem 'activerecord-oracle_enhanced-adapter', '~&gt; 1.5.0'   (这个版本,需要根据Rails的来调整,见官方文档)
+gem 'ruby-oci8', '2.2.3'
+</pre>
+<p>6. 修改database.yml:&#160;</p>
+<pre>default: &amp;default
+  adapter: oracle_enhanced
+  username: SYlala
+  password: SYlala
+
+  # 写法1:
+  database: 218.5.22.22/your_db
+  # 写法2:  database:  oracle的tns字符串
+  database: "(DESCRIPTION=
+    (ADDRESS_LIST=(ADDRESS=(PROTOCOL=tcp)(HOST=218.5.22.22)(PORT=1521)))
+    (CONNECT_DATA=(SERVICE_NAME=your_db))
+    )"
+
+development:
+  &lt;&lt;: *default
+</pre>
+<p>7. 设置一个model:&#160;  (<a href="https://github.com/rsim/oracle-enhanced">https://github.com/rsim/oracle-enhanced</a>)</p>
+<pre>class User &lt; ActiveRecord::Base
+    self.table_name ='tuser'   # 设置表名字,具体还有很多设置方法, 见oracle-hanced的官方wiki
+end
+</pre>
+<p>8. 开始测试</p>
+<p>$ bundle install</p>
+<p>$ bundle exec rails console</p>
+<p>rails &gt; &#160;User.first&#160;</p>
+<pre>irb(main):001:0&gt; User.first
+  Sequence (94.0ms)  select us.sequence_name from all_sequences us where us.sequence_owner = 'SYCORP' and us.sequence_name = 'TUSER_SEQ'
+  Primary Key (130.0ms)  SELECT cc.column_name FROM all_constraints c, all_cons_columns cc WHERE c.owner = 'SYCORP' AND c.table_name = 'TUSER' AND c.constraint_type = 'P' AND cc.owner = c.owner AND cc.constraint_name = c.constraint_name
+  User Load (474.8ms)  SELECT * FROM (SELECT  "TUSER".* FROM "TUSER"   ORDER BY "TUSER"."ID" ASC) WHERE ROWNUM &lt;= 1
+   (1876.2ms)  SELECT column_name AS name, data_type AS sql_type, data_default, nullable, virtual_column, hidden_column, data_type_owner AS sql_type_owner, DECODE(data_type, 'NUMBER', data_precision, 'FLOAT', data_precision, 'VARCHAR2', DECODE(char_used, 'C', char_length, data_length), 'RAW', DECODE(char_used, 'C', char_length, data_length), 'CHAR', DECODE(char_used, 'C', char_length, data_length), NULL) AS limit, DECODE(data_type, 'NUMBER', data_scale, NULL) AS scale FROM all_tab_cols WHERE owner = 'SYCORP' AND table_name = 'TUSER' AND hidden_column = 'NO' ORDER BY column_id
+=&gt; #&lt;User id: 0, userid: "admin", password: "3a55dd3d48ef45fea12dc8854776313c", name: "???", grade: 0, lastlogin: "2017-05-27 16:34:13", logins: 12954, chgpwdtime: "2017-04-17 11:58:29", chgpwdlimit: 10000, status: 1, iplimit: nil, certno: nil, orgid: 3, photo: "\v\xC1\xBF\xB7\xBF\xCD\xBC2.jpg\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x02\x00\x00\x01\x00\x01\x00\x00\xFF\xDB\x00C\x00\b\x06\x06\a\x06\x05\b\a\a\a\t\t\b...", femployee: 98, email: nil, flogins: #<bigdecimal:565428e17aa8,'0.12954e5',9(27)>, fphone: nil, userattribute: nil&gt;
+
+</bigdecimal:565428e17aa8,'0.12954e5',9(27)></pre>
+<p>9. 最后,如果是中文的话,记得设置 数据库的编码格式.</p>
+<p>在config/boot.rb中, 加入:&#160;ENV['NLS_LANG'] ||= 'AMERICAN_AMERICA.UTF8'</p>
