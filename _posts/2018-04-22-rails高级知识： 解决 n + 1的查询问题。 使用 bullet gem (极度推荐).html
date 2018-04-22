@@ -1,0 +1,17 @@
+<p>n + 1 问题挺难搞的。 &#160;别说新手，很多老手都会被 N &#160;+ 1问题困扰。&#160;</p>
+<p>先说解决办法： &#160;使用 includes， 在 where, 或者 find &#160;等查询之前。</p>
+<p>例如：&#160;</p>
+
+<pre>      @fans = Fan.joins(:sales_checks)
+                 .includes([:sales_checks =&gt; [{:wins =&gt; :award}, :cash_desk]])
+</pre>
+<p>如果， fan : sales_checks = 1 : n,</p>
+<p>sales_checks : wins = 1 : n &#160; , &#160; &#160;sales_checks : cash_desk = n : 1</p>
+<p>wins : award = n : 1</p>
+<p>那么，我们在查询fan的时候，要带上 &#160;sales_checks, 那么就 Fan.includes(:sales_checks)</p>
+<p>也可以写成： &#160;Fan.includes( [:sales_checks])</p>
+<p>如果在查询时，要带上 wins, 那么就： &#160; Fan.includes([:sales_checks =&gt; [:wins]])</p>
+<p>如果再带上 cash_desk的话, 那么就 &#160;Fan.includes([:sales_checks =&gt; [:wins, :cash_desk]) &#160;(注意这里 &#160; cash_desk是单数， 因为一个 &#160; &#160;cash_desk对应多个 sales_checks )&#160;</p>
+<p>如果要带上 &#160;wins的 award的话， 那么就是：&#160;</p>
+<p>Fan.includes([:sales_checks =&gt; [{:wins =&gt; :award}]])</p>
+<p>推荐大家使用bullet 这个gem .特别好用.</p>
