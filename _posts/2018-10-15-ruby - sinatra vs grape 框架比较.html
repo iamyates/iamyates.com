@@ -1,0 +1,42 @@
+<p>sinatra 和 grape都是ruby 的api框架。&#160;</p>
+<p>性能上： sinatra大约是 grape的2倍。高判立下。</p>
+<h3> sinatra代码</h3>
+<pre>require 'sinatra'
+get '/hi' do
+  "Put this in your pipe &amp; smoke it!, name: #{params[:name]}"
+end
+
+</pre>
+<p>$ ab -n 1000 -c 100 http://localhost:4567/hi?name=jim</p>
+<p>Requests per second:    1629.18 [#/sec] (mean)</p>
+<h3>grape代码</h3>
+<pre>require 'sinatra'
+require 'grape'
+
+class API &lt; Grape::API
+  format :json
+  params do
+    requires :name, type: String
+    optional :number, type: String, regexp: /abc.*/
+    optional :page, type: Integer
+  end
+  get :hello do
+    {
+      hello: "hello #{params[:name]}, #{params[:number]}"
+    }
+  end
+
+  get :hi do
+    {
+      hi: 'good day!'
+    }
+  end
+
+end
+
+run API
+</pre>
+<p>$  ab -n 1000 -c 100 http://localhost:9292/hello.json?name=siwei</p>
+<p> Requests per second:    647.96 [#/sec] (mean)</p>
+<p>$  ab -n 1000 -c 100 http://localhost:9292/hi.json</p>
+<p>Requests per second:    813.11 [#/sec] (mean)</p>
