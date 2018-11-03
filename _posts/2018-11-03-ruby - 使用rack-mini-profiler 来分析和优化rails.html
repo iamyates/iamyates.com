@@ -1,0 +1,14 @@
+<p>参考 ： <a href="https://github.com/MiniProfiler/rack-mini-profiler">https://github.com/MiniProfiler/rack-mini-profiler</a>
+</p>
+<p>以及: 这个: 特别有意思, 写的特别好:&#160; <a href="https://stackify.com/rack-mini-profiler-a-complete-guide-on-rails-performance">https://stackify.com/rack-mini-profiler-a-complete-guide-on-rails-performance/</a>
+</p>
+<p>1. Gemfile:&#160;gem 'rack-mini-profiler', require: false</p>
+<p>2&#160;&#160;bundle exec rails g rack_profiler:install</p>
+<p>会生成文件&#160;config/initializers/rack_profiler.rb&#160; 内容如下：</p>
+<pre>if Rails.env.development?
+  require "rack-mini-profiler"
+
+  # initialization is skipped so trigger it
+  Rack::MiniProfilerRails.initialize!(Rails.application)
+end
+</pre>
