@@ -1,0 +1,35 @@
+<p>参考：<a href="https://github.com/mperham/sidekiq">https://github.com/mperham/sidekiq</a>
+</p>
+<p>sidekiq 比delayed_job 好的点，就在于速度快！</p>
+<p>我觉得特别特别特别适合我正在做的项目哈哈哈哈</p>
+<p>前些日子被这个问题困扰了很久，现在终于知道了，内存化＋数据库持久化，解决办法就是把数据库的操作sidekiq化．哈哈</p>
+<p>执行速度：　4500 / s  ，　delayed_job: 200/s     原因是前者放在redis中，后者放在 db中．</p>
+<p>使用方式：</p>
+<p>sinatra:&#160;</p>
+<p>1. app.rb:</p>
+<pre>先定义这个 worker
+class TestWorker
+  include Sidekiq::Worker
+  # 注意： 这里传入的参数不能是复杂类型， 否则会出现serialize的错误。
+  # 所以如果需要对多个model进行操作时，一个model一个worker好了。
+  def perform sleep_time
+    sleep sleep_time
+  end
+end
+
+然后在app.rb 中require
+
+然后在app.rb 中：
+
+TestWorker.perform_async(20)
+
+就可以了．
+</pre>
+<p>配置文件：config/sidekiq.yml</p>
+<pre># 注意：　不要超过50 ，官方要求这样．默认是１０并发
+concurrency: 50
+</pre>
+<p>2. 运行sidekiq的命令：</p>
+<p>bundle exec sidekiq -r ./app.rb</p>
+<p>3. sidekiq的任务都保存在那里？</p>
+<p>4. 传入的参数，需要是简单的json , hash , 不能是复杂的activerecord model</p>
