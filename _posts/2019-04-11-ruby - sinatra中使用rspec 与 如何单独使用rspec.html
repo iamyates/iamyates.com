@@ -1,0 +1,60 @@
+<p>参考：<a href="http://recipes.sinatrarb.com/p/testing/rspec">http://recipes.sinatrarb.com/p/testing/rspec</a>
+</p>
+
+<p> Rspec的各种expect 在这里；<a href="http://rspec.info/documentation/3.8/rspec-expectations">http://rspec.info/documentation/3.8/rspec-expectations/</a>
+</p>
+<p>非常简单。 特别好用。&#160;</p>
+<p>1. 有个app.rb&#160;</p>
+<pre>require 'sinatra'
+require 'sinatra/json'
+require 'sinatra/activerecord'
+
+Dir[File.join(__dir__, 'model', '*.rb')].each { |file| require file }
+
+get '/' do
+  "Hi there, can I help you ?"
+end
+
+</pre>
+<p>2. 有个spec/spec_helper.rb</p>
+<pre>require 'rack/test'
+require 'rspec'
+
+ENV['RACK_ENV'] = 'test'
+
+require File.expand_path '../../app.rb', __FILE__
+
+module RSpecMixin
+  include Rack::Test::Methods
+  def app() Sinatra::Application end
+end
+
+RSpec.configure { |c|
+    c.include RSpecMixin
+    # 为了使用.should
+    c.expect_with(:rspec) { |c| c.syntax = [:should, :expect] }
+}
+
+</pre>
+<p>3. spec/app_spec.rb</p>
+<pre>require File.expand_path '../spec_helper.rb', __FILE__
+
+describe "My Sinatra Application" do
+  it "应该可以访问欢迎页" do
+    get '/'
+    # Rspec 2.x
+    expect(last_response).to be_ok
+  end
+end
+
+</pre>
+<p>运行方式： bundle exec rspec spec/app_spec.rb</p>
+<p>需要导入数据库结构的话，使用：</p>
+<p>1. 生成一个 新的 db/schema.rb （可以通过其他项目的rails 命令来生成， ，或者在sinatra下， $ rake db:schema:dump&#160;</p>
+<p>2. 在测试环境下加载这个文件： $ rake db:schema:load APP_ENV=test&#160; （注意这里不是RAILS_ENV)&#160;</p>
+<h3>单独使用rspec</h3>
+<p>1. Gemfile:</p>
+<p>gem 'rspec'</p>
+<p>2. bundle install --binstubs</p>
+<p>3. ./bin/rspec --init</p>
+<p>就可以了</p>
