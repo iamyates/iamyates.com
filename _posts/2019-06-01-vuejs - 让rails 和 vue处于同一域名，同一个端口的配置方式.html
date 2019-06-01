@@ -1,0 +1,72 @@
+<p>两种方式：&#160;</p>
+<p>1. 使用thin cluster: 特别简单， 参考：<a href="https://stackoverflow.com/questions/49779575/running-frontend-and-backend-on-the-same-port">https://stackoverflow.com/questions/49779575/running-frontend-and-backend-on-the-same-port</a>
+</p>
+<p>但是这种办法的本质上， rails是处于其他端口的。 然后在nginx上做代理转发</p>
+<pre>upstream backend {
+    server 127.0.0.1:3000;
+}
+
+server {
+    listen 80 default_server;
+
+    location /api/ {
+        proxy_pass         http://backend;
+        proxy_redirect     off;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Host $server_name;
+    }
+
+    location / {
+        root /opt/frontend/dist;
+        try_files $uri $uri/ /index.html;
+    }
+}
+</pre>
+<p>2. 对于其他服务器（例如 puma, passenger），需要：</p>
+<pre>http {
+    passenger_root /usr/local/rvm/gems/ruby-2.2.10/gems/passenger-6.0.0;
+    passenger_ruby /usr/local/rvm/gems/ruby-2.2.10/wrappers/ruby;
+
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    # 80 端口。
+    server {
+     listen 80;
+     passenger_enabled on;
+     # 这个是配置rails的
+     root /mnt/web/rails_server/public;
+     charset utf-8;
+     # 配置其他的assets
+     location ~ ^/(images|javascripts|stylesheets|upload|assets|video)/  {
+       root /mnt/www/rails_server/public;
+       expires 30d;
+       add_header Cache-Control public;
+       add_header ETag "";
+     }
+
+     # vuejs .
+     location /vue.html {
+       root   /mnt/web/h5/dist;
+     }
+     location /static {
+       root   /mnt/web/h5/dist;
+     }
+
+    }
+}</pre>
+<p>然后，把vuejs项目中的 index.html 改成：vue.html (注意 .html不能省略） ，这样做看起来是：&#160;</p>
+<p>1. passenger 占主要地位&#160;&#160;</p>
+<p>2. vuejs 占次要地位</p>
+<p>好处是：</p>
+<p>1. 使用同一域名，不存在跨域问题</p>
+<p>2. 可以在spa 和 ssa ( server side app )中无缝切换，共享 cookie 等。</p>
+<p>记得vue中的各种http 请求可能需要重新修改一下路径即可。 另外编译vuejs 的时候。 弄个脚本，把 index.html都做个重命名。&#160;</p>
