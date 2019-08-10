@@ -1,0 +1,15 @@
+<p>原理：&#160; &#160;&#160;</p>
+<p>"abc"[0,1] # =&gt; "ab"</p>
+<p>"abc"[-2..-1]&#160; # =&gt; "bc"&#160; &#160;</p>
+<p>获得某个字符串的后面几位也可以写成：　"abc".chars.last(3).join("")</p>
+<p>（参考：<a href="https://stackoverflow.com/questions/2174767/extracting-the-last-n-characters-from-a-ruby-string">https://stackoverflow.com/questions/2174767/extracting-the-last-n-characters-from-a-ruby-string</a> )</p>
+<div><p>下面是方法：</p>
+<div><pre>  def short_format options
+    content = options[:content]
+    digit = options[:digit] || 5
+    return "#{content[0, digit]}...#{content[(0 - digit).. -1]}"
+  end
+</pre>
+<p>ruby 简直太优雅了．（通俗的讲，ruby 简直太好用了)</p>
+</div>
+</div>
