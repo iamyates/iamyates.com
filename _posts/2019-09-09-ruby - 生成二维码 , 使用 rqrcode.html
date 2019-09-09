@@ -1,0 +1,24 @@
+<p>参考:&#160; <a href="https://github.com/whomwah/rqrcode">https://github.com/whomwah/rqrcode</a>
+</p>
+<p>1. gemfile:&#160; gem 'rqrcode'</p>
+<p>2.&#160; 在helper中:&#160;</p>
+<pre>  require 'base64'
+  def generate_qr_code string
+    qr_code = RQRCode::QRCode.new string
+    png = qr_code.as_png(
+      resize_gte_to: false,
+      resize_exactly_to: false,
+      fill: 'white',
+      color: 'black',
+      size: 180,
+      border_modules: 0,
+      module_px_size: 0,
+      file: nil # path to write
+    ).to_s
+    Base64.encode64 png
+    return "data:image/png;base64,#{Base64.encode64(png)}"
+  end
+</pre>
+<p>3. 在 view 中:</p>
+<p>&lt;%= image_tag generate_qr_code('http://baidu.com')%&gt;
+</p>
