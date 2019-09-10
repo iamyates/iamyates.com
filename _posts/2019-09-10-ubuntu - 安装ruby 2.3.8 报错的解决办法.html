@@ -1,0 +1,10 @@
+<p> 参考：<a href="https://stackoverflow.com/questions/50085258/installing-ruby-2-3-x-on-ubuntu-18-04-is-causing-an-error-by-the-end-of-the-inst">https://stackoverflow.com/questions/50085258/installing-ruby-2-3-x-on-ubuntu-18-04-is-causing-an-error-by-the-end-of-the-inst</a>
+</p>
+<p>今天安装的时候报错了。找了下日志，发现 是这个原因：</p>
+<p> error: macro "EVP_MD_CTX_create" passed 1 arguments, but takes just 0<br /> EVP_MD_CTX *EVP_MD_CTX_create(void);</p>
+<p>解决办法<br />1。 sudo apt purge libssl-dev &amp;&amp; sudo apt install libssl1.0-dev
+</p>
+<p>2.&#160; $ rbenv install 2.3.8&#160;
+</p>
+<p>就可以了。
+</p>
