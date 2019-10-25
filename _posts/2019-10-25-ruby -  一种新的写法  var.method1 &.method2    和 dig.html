@@ -1,0 +1,13 @@
+<p>参考:&#160; <a href="http://mitrev.net/ruby/2015/11/13/the-operator-in-ruby">http://mitrev.net/ruby/2015/11/13/the-operator-in-ruby/</a>
+</p>
+<p>ruby 2.3 之后,有这样的特性: &#160;&amp;. 和 dig. &#160;</p>
+<p>总之,</p>
+<p>if account &amp;&amp; account.owner &amp;&amp; account.owner.address</p>
+<p>可以写成:</p>
+<p>if account.try(:owner).try(:address)&#160;</p>
+<p>等同于</p>
+<p>if account &amp;.owner &amp;.address&#160;</p>
+<p>对于dig, 也有同样的道理:</p>
+<p>account.try([], :owner).try([], :address)</p>
+<p>等同于:</p>
+<p>account.dig(:owner, :address)&#160;</p>
