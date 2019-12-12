@@ -1,0 +1,101 @@
+<p>参考： <a href="https://stackoverflow.com/questions/51882246/oracle-how-to-prevent-multiple-multiple-processes-from-updating-same-row"> https://stackoverflow.com/questions/51882246/oracle-how-to-prevent-multiple-multiple-processes-from-updating-same-row
+</a> </p>
+<p>参考：<a href="https://ruby-china.org/topics/28963">https://ruby-china.org/topics/28963</a>&#160;（乐观锁和悲观锁)</p>
+<p>这个例子说的非常形象。</p>
+<pre>Process #1              Process #2
+------------------      ------------------
+Read from Database
+Some processing...      Read from database
+Some processing...      Some processing...
+Update database         Some processing...
+                        Update database
+</pre>
+<p>rails 中，使用悲观锁．</p>
+<pre>     ask_account = MyModel.find 1
+     Account.transaction do
+       ask_account.lock!
+       ask_account.balance += self.volume.to_d
+       ask_account.save!
+    end
+</pre>
+<h3>测试１</h3>
+<p>下面是个单元测试：</p>
+<pre>  it '应该实现悲观锁，两个进程同时修改一个model' do
+    $logger.info "------- 测试悲观锁, start"
+    a1 = Thread.new {
+      account = Account.last
+      Account.transaction do
+        account.lock!
+        account.balance += 333
+
+        # 这里不sleep. 直接运行
+        account.save!
+      end
+    }
+
+    # 第二个进程立刻
+    a2 = Thread.new {
+      account = Account.last
+      Account.transaction do
+        account.lock!
+        account.balance += 444
+        account.save!
+      end
+    }
+
+    a1.join
+    Account.last.balance.should == 333 + 100
+    $logger.info "------- 测试悲观锁, ends"
+  end
+
+</pre>
+
+<p> 结果如下：</p>
+<pre>21:01:52 INFO: ------- 测试悲观锁, start
+21:01:52 DEBUG:    (1.2ms)  SET NAMES utf8 COLLATE utf8_general_ci,  @@SESSION.sql_mode = CONCAT(CONCAT(@@sql_mode, ',STRICT_ALL_TABLES'), ',NO_AUTO_VALUE_ON_ZERO'),  @@SESSION.sql_auto_is_null = 0, @@SESSION.wait_timeout = 2147483
+21:01:52 DEBUG:    (1.7ms)  SET NAMES utf8 COLLATE utf8_general_ci,  @@SESSION.sql_mode = CONCAT(CONCAT(@@sql_mode, ',STRICT_ALL_TABLES'), ',NO_AUTO_VALUE_ON_ZERO'),  @@SESSION.sql_auto_is_null = 0, @@SESSION.wait_timeout = 2147483
+21:01:52 DEBUG:   Account Load (0.2ms)  SELECT  `accounts`.* FROM `accounts` ORDER BY `accounts`.`id` DESC LIMIT 1
+21:01:52 DEBUG:   Account Load (0.2ms)  SELECT  `accounts`.* FROM `accounts` ORDER BY `accounts`.`id` DESC LIMIT 1
+21:01:52 DEBUG:    (0.5ms)  BEGIN
+21:01:52 DEBUG:    (0.5ms)  BEGIN
+21:01:52 DEBUG:   Account Load (1.6ms)  SELECT  `accounts`.* FROM `accounts` WHERE `accounts`.`id` = 1354 LIMIT 1 FOR UPDATE
+21:01:52 DEBUG:   Account Update (0.3ms)  UPDATE `accounts` SET `balance` = 433.0, `updated_at` = '2019-08-26 21:01:52' WHERE `accounts`.`id` = 1354
+21:01:52 DEBUG:   Account Load (2.5ms)  SELECT  `accounts`.* FROM `accounts` WHERE `accounts`.`id` = 1354 LIMIT 1 FOR UPDATE
+21:01:52 DEBUG:   Account Update (0.3ms)  UPDATE `accounts` SET `balance` = 877.0 WHERE `accounts`.`id` = 1354
+21:01:52 DEBUG:    (14.7ms)  COMMIT
+21:01:52 DEBUG:   Account Load (0.4ms)  SELECT  `accounts`.* FROM `accounts` ORDER BY `accounts`.`id` DESC LIMIT 1
+21:01:52 INFO: ------- 测试悲观锁, ends
+21:01:52 DEBUG:    (20.1ms)  COMMIT
+</pre>
+<p>从上面来看，两个事务是先后结束的．不存在rollback. 第二个进程会自动等待第一个进程结束．</p>
+<p>哪怕当前程序只是　t1.join, （只等待t1 ) ,　t2也会生效．</p>
+<h3>测试２.　　</h3>
+<pre>    a1 = Thread.new {
+      account = Account.last
+      Account.transaction do
+        account.lock!
+        account.balance += 333
+
+        # 这里休息 0.1s   &lt;----------  增加了这个代码
+        sleep 0.1
+        account.save!
+      end
+    }
+</pre>
+<pre>21:03:33 INFO: ------- 测试悲观锁, start
+21:03:33 DEBUG:    (2.0ms)  SET NAMES utf8 COLLATE utf8_general_ci,  @@SESSION.sql_mode = CONCAT(CONCAT(@@sql_mode, ',STRICT_ALL_TABLES'), ',NO_AUTO_VALUE_ON_ZERO'),  @@SESSION.sql_auto_is_null = 0, @@SESSION.wait_timeout = 2147483
+21:03:33 DEBUG:    (2.1ms)  SET NAMES utf8 COLLATE utf8_general_ci,  @@SESSION.sql_mode = CONCAT(CONCAT(@@sql_mode, ',STRICT_ALL_TABLES'), ',NO_AUTO_VALUE_ON_ZERO'),  @@SESSION.sql_auto_is_null = 0, @@SESSION.wait_timeout = 2147483
+21:03:33 DEBUG:   Account Load (1.2ms)  SELECT  `accounts`.* FROM `accounts` ORDER BY `accounts`.`id` DESC LIMIT 1
+21:03:33 DEBUG:   Account Load (2.0ms)  SELECT  `accounts`.* FROM `accounts` ORDER BY `accounts`.`id` DESC LIMIT 1
+21:03:33 DEBUG:    (0.5ms)  BEGIN
+21:03:33 DEBUG:    (0.8ms)  BEGIN
+21:03:33 DEBUG:   Account Load (0.8ms)  SELECT  `accounts`.* FROM `accounts` WHERE `accounts`.`id` = 1355 LIMIT 1 FOR UPDATE
+21:03:33 DEBUG:   Account Update (0.3ms)  UPDATE `accounts` SET `balance` = 433.0 WHERE `accounts`.`id` = 1355
+# 注意这里，这个 102.4ms . 显示等待了　t1 结束，第二个才生效．
+21:03:33 DEBUG:   Account Load (102.4ms)  SELECT  `accounts`.* FROM `accounts` WHERE `accounts`.`id` = 1355 LIMIT 1 FOR UPDATE
+21:03:33 DEBUG:   Account Update (0.3ms)  UPDATE `accounts` SET `balance` = 877.0 WHERE `accounts`.`id` = 1355
+21:03:33 DEBUG:    (14.5ms)  COMMIT
+21:03:33 DEBUG:   Account Load (0.2ms)  SELECT  `accounts`.* FROM `accounts` ORDER BY `accounts`.`id` DESC LIMIT 1
+21:03:33 INFO: ------- 测试悲观锁, ends
+21:03:33 DEBUG:    (16.8ms)  COMMIT
+</pre>
