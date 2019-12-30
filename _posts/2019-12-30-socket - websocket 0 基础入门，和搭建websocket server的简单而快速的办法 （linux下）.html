@@ -1,0 +1,140 @@
+<p>注意：&#160; 这个系列文章非常好：&#160; <a href="https://www.rails365.net/articles/websocket-xu-lie-wen-zhang-mu-lu">https://www.rails365.net/articles/websocket-xu-lie-wen-zhang-mu-lu</a>  可以作为 0 基础的同学的入门</p>
+<p>websocket 是基于web的类似于socket协议的一种东东。 不过 websocket 与 socket的关系，就好像javascript 与 java的关系， 巴基斯坦与卡巴斯基的关系，张三与张三丰的关系。。。 Orz 有基巴关系。。。</p>
+<p>windows 下的失败原因： windows下出现各种诡异问题，无法解决。 例如： 无法运行.bat, .cmd脚本，无法直接运行ruby命令。 github issues页面也没有给出解释。</p>
+<p>http的特点：　</p>
+<p>1. 单方面请求。　（浏览器　-&gt; &#160;服务器)</p>
+<p>2. 无法保存状态</p>
+<p>socket特点：</p>
+<p>1. 双方向请求。　</p>
+<p>2. 有状态。</p>
+<p>websocket 也分成 80端口(ws://) 和　433端口(wss://)&#160;</p>
+<p>可以使用这个server 来实现任何后端语言：　<a href="https://github.com/joewalnes/websocketd">https://github.com/joewalnes/websocketd</a>
+</p>
+<p>1. 先在本机安装个 websocket server:&#160; 见上图github. 下来下来就是个二进制文件。</p>
+<p>2. 使用一个 sh 脚本。&#160; 如下：</p>
+<pre>$ chmod +x test_echo.sh
+$ ./test_echo.sh
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre>
+<p>3. 使用 websocketd 来运行（ 务必记得 对应的脚本是有权限的)</p>
+<p>websocketd --port=3333 ./test_echo.sh </p>
+<p>4. 打开一个html文件，内容如下：</p>
+<pre>&lt;html&gt;
+  &lt;pre id="log"&gt;&lt;/pre&gt;
+  &lt;script&gt;
+function log(msg){
+  document.getElementById('log').textContent += msg + '\n';
+}
+
+var ws = new WebSocket('ws://localhost:3333');
+
+ws.onopen = function(){
+  log('connect')
+}
+
+ws.onclose = function(){
+  log('close')
+}
+
+ws.onmessage = function(event){
+  log('message: ' + event.data)
+}
+
+  &lt;/script&gt;
+&lt;/html&gt;</pre>
+<p>可以看出， 客户端的几个关键方法：&#160; &#160;</p>
+<p>onopen,&#160; &#160;打开时调用</p>
+<p>onclose,&#160; &#160;关闭时调用</p>
+<p>onmessage， 收到消息时调用</p>
+<h1>Rails 4.2 中使用websocket</h1>
+<p>
+需要跟 tubesock, redis , rails 一起使用。参考：&#160; <a href="https://www.rails365.net/articles/websocket-zhi-yong-tubesock-zai-rails-shi-xian-liao-tian-shi-wu">https://www.rails365.net/articles/websocket-zhi-yong-tubesock-zai-rails-shi-xian-liao-tian-shi-wu</a>
+</p>
+<p>1. 新建一个action:&#160; &#160;/welcome/chat&#160; , 这个action 就是专门复杂处理socket 请求的。可以认为这个action就承担着&#160; websocket服务器的职能。 它的访问链接是：&#160; ws://localhost:3000/welcome/chat&#160;</p>
+<p>代码如下：</p>
+<p>#Gemfile:&#160; （版本号随意)</p>
+<p>gem 'tubesock'<br />gem 'puma', '3.11.0'<br />gem 'redis-rails', '5.0.2'</p>
+<pre># routes.rb
+  get '/welcome/chat' =&gt; 'welcome#chat'
+  get '/welcome/test_chat' =&gt; 'welcome#test_chat'
+
+# welcome_controller.rb:
+  include Tubesock::Hijack
+  def chat
+    hijack do |tubesock|
+      redis_thread = Thread.new do
+        Redis.new.subscribe "chat" do |on|
+          on.message do |channel, message|
+            tubesock.send_data message
+          end
+        end
+      end
+
+      tubesock.onmessage do |m|
+        Redis.new.publish "chat", m
+      end
+
+      tubesock.onclose do
+        redis_thread.kill
+      end
+    end
+  end
+
+# config/application.rb 中，增加：
+config.cache_store = :redis_store, "redis://localhost:6379/2/cache", { expires_in: 90.minutes }
+否则会报错。 报莫名其妙的错误。　（不看full stack trace 看不出来。　看了之后也只能大体猜到是redis的问题, 没配置好。)
+
+</pre>
+<p>2. 记得，在上一步的时候， redis 要启动 (telnet localhost 6379)&#160;</p>
+<p>3. 然后，我们就可以在 web browser的console中，测试一下：&#160;</p>
+<pre>socket = new WebSocket("ws://localhost:3000/welcome/chat")
+WebSocket&#160;{url: "ws://localhost:3000/welcome/chat", readyState: 0, bufferedAmount: 0, onopen: null, onerror: null,&#160;…}
+</pre>
+<p>4. 我们接下来，就可以单独写一个页面了。 （注意要新增一个erb页面： test_chat ) </p>
+<pre>&lt;h1&gt;Tubesock Chat&lt;/h1&gt;
+&lt;pre id="output"&gt;&lt;/pre&gt;
+&lt;form class="chat"&gt;
+  &lt;input placeholder="hello world" autofocus&gt;
+&lt;/form&gt;
+&lt;script src="http://cdn.bootcss.com/jquery/1.9.1/jquery.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+jQuery(function(){
+  socket = new WebSocket("ws://localhost:3000/welcome/chat")
+
+  socket.onmessage = function(event) {
+    if(event.data.length){
+      $("#output").append(event.data + "&lt;br /&gt;")
+    }
+  }
+
+  $("body").on("submit", "form.chat", function(event){
+    event.preventDefault()
+    $input = $(this).find("input")
+    socket.send($input.val())
+    $input.val(null)
+  })
+})
+&lt;/script&gt;
+
+</pre>
+
+<p>在Rails中增加websocket,&#160;&#160;需要注意的是：
+</p>
+<p>1.&#160; 一旦controller创建好之后（controller, Gemfile ) ，如果页面没有实际内容的操作代码， 页面会一直转圈，但是不会显示任何内容。等一会儿就会报错。
+</p>
+<p>实际上，我们看下后台，会发现，后台的日志中， 有&#160;
+</p>
+<p>17:00:50 INFO: Completed -1  in 64ms (Views: 1.0ms | ActiveRecord: 9.5ms)
+</p>
+<p>这个就说明成了。
+</p>
