@@ -1,0 +1,24 @@
+<p>1. 修改 ~/.gitconfig, 增加下面这一行：</p>
+<pre>[alias]
+        worklog = log --pretty=format:'%s'
+</pre>
+<p>2. 然后输入 $git worklog &#160;就可以看到下列内容：</p>
+<pre>$ git worklog
+完善了对于不合格的文件的及格率
+更新了las.jar
+更新了las.jar
+修复了bug: 当某个点少于10的话,会报错
+修复了bug: 当某个点少于10的话,会报错
+修复了bug: 当某个点少于10的话,会报错
+更新了las.jar,  增加了debug=true
+完善了在windows下运行java脚本出现的找不到文文件的问题
+修改了settings.yml 配置文件
+Merge branch 'master' of git.coding.net:swxx/las_analyzer
+增加了出错提示的jar
+可以在win下跑起来了
+Merge branch 'master' of git.coding.net:swxx/las_analyzer
+增加了 config下的几个配置文件
+save gems to local
+removed gem from Gemfile
+</pre>
+<p>3. 要为这些内容增加序号的话，写个ruby 脚本给他们加上行号，或者直接在vim中打开，复制，就可以了。</p>
