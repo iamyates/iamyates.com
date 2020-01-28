@@ -1,0 +1,47 @@
+<p>capistrano &#160;太好用了。 神器。</p>
+<p>目前的命令： $ bundle exec cap deploy ( &#160;需要 ruby 1.9.3 + 环境）</p>
+<p>部署脚本： config/deploy.rb</p>
+<p>（注意： 我把关键点 按照注释的形式，写在了下面）</p>
+<pre># -*- encoding : utf-8 -*-
+require 'capistrano-rbenv'
+load 'deploy/assets'
+SSH_USER = '?????'
+ssh_options[:port] = ?????
+set :rake, "bundle exec rake"
+set :application, "touring"
+set :repository, "./dist"   # 我只部署这个文件夹。
+set :scm, :none
+set :deploy_via, :copy      # 使用传统的上传代码的形式。
+set :copy_exclude, ['tmp', 'log']  # 忽略一些东东
+
+server = "h5.???.com.cn"
+
+role :web, server
+role :app, server
+role :db,  server, :primary =&gt; true
+role :db,  server
+
+set :deploy_to, "/opt/app/tuling_h5"
+set :copy_exclude, [".git", "node_modules", "src"]  # 不要使用不必要的文件.
+default_run_options[:pty] = true
+
+# change to your username
+set :user, SSH_USER
+
+namespace :deploy do
+  task :restart, :roles =&gt; :app, :except =&gt; { :no_release =&gt; true } do
+    run "nginx -s reload"
+  end
+
+end
+</pre>
+<p>我们之前部署vuejs的方式： &#160;纯手动： 好麻烦。</p>
+<p>1. $ npm run build &#160; &#160; # 生成 dist 目录</p>
+<p>2. $ zip h5.zip -r dist &#160; &#160;把dist 目录打包成 h5.zip&#160;</p>
+<p>3. $ scp -P &lt;ssh port&gt; h5.zip root@yoursite.com:/opt/app/h5 &#160; # 把h5.zip copy 到对应目录下</p>
+<p>4. $ ssh yoursitte.com &#160; # ssh &#160;登陆到服务器上，具体命令略</p>
+<p>5. $ cd /opt/app/h5</p>
+<p>6. $ unzip h5.zip</p>
+<p>7. $ mv current &#160;archive.20160803001 &#160;# 把当前的部署版本重命名</p>
+<p>8. $ mv dist current &#160; # 把最新的文件夹，命名成 &#160;current.&#160;</p>
+<p>9. $ nginx -s reload &#160;# 重启 nginx&#160;</p>
