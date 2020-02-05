@@ -1,0 +1,18 @@
+参考：<a href="http://stackoverflow.com/questions/9757261/how-do-i-run-a-ruby-file-in-a-rails-environment">http://stackoverflow.com/questions/9757261/how-do-i-run-a-ruby-file-in-a-rails-environment</a>&#160;
+<div><p>1. 新建一个 文件： script/test_hi.rb
+</p>
+<pre># 运行方式：
+#
+# $ bundle exec ruby script/test_hi.rb
+#
+ENV['RAILS_ENV'] = ARGV.first || ENV['RAILS_ENV'] || 'production'
+require File.expand_path(File.dirname(__FILE__) + "/../config/environment")
+require 'rails'
+require 'rubygems'
+
+puts 'hihihi'
+puts User.all
+</pre>
+
+<p>2. 运行： $ bundle exec ruby script/test_hi.rb  </p>
+</div>
