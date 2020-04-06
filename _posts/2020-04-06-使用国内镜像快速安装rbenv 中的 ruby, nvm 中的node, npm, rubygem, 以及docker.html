@@ -1,0 +1,63 @@
+<p>refer to:&#160; <a href="https://github.com/AndorChen/rbenv-taobao-mirror">https://github.com/AndorChen/rbenv-taobao-mirror</a>
+</p>
+<p>1. rbenv中安装ruby</p>
+
+<p>先安装这个 rbenv plugin: </p>
+<pre>$ git clone https://github.com/andorchen/rbenv-taobao-mirror.git ~/.rbenv/plugins/rbenv-taobao-mirror</pre>
+<p> 然后正常安装ruby版本即可：</p>
+<p>如果要使用代理也很简单，&#160; 只要先设置好系统变量https_proxy即可。 </p>
+<p>$ https_proxy=127.0.0.1:16808 (假设你也有这样的翻墙工具）</p>
+<p>2. nvm中安装 node:&#160; ( NOTICE:&#160; this is not NPM install )</p>
+<pre>$ NVM_NODEJS_ORG_MIRROR=https://npm.taobao.org/dist nvm install 0.10.37</pre>
+(或者 <pre>$ export NVM_NODEJS_ORG_MIRROR=https://npm.taobao.org/dist
+ export写到~/.bashrc, ~/.zshrc ) </pre>
+
+<p> 3. rubygem中： </p>
+<pre>直接在Gemfile中编辑 source , 使用淘宝镜像即可：
+  source 'https://ruby.taobao.org'
+
+或者：
+$ bundle config mirror.https://rubygems.org http://ruby.taobao.org
+</pre>
+<p>4. &#160;npm 安装各种组件：</p>
+<pre>使用说明
+你可以使用我们定制的 cnpm (gzip 压缩支持) 命令行工具代替默认的 npm:
+
+$ npm install -g cnpm --registry=https://registry.npm.taobao.org
+或者你直接通过添加 npm 参数 alias 一个新命令:
+
+alias cnpm="npm --registry=https://registry.npm.taobao.org \
+--cache=$HOME/.npm/.cache/cnpm \
+--disturl=https://npm.taobao.org/dist \
+--userconfig=$HOME/.cnpmrc"
+
+# Or alias it in .bashrc or .zshrc
+$ echo '\n#alias for cnpm\nalias cnpm="npm --registry=https://registry.npm.taobao.org \
+  --cache=$HOME/.npm/.cache/cnpm \
+  --disturl=https://npm.taobao.org/dist \
+  --userconfig=$HOME/.cnpmrc"' &gt;&gt; ~/.zshrc &amp;&amp; source ~/.zshrc
+</pre>
+<p>5. docker  和 pip的：</p>
+
+<pre>## docker mirror
+[mirror by daocloud](https://dashboard.daocloud.io/mirror)
+[setup local mirror](http://docs.docker.com/articles/registry_mirror/)
+
+## python pip 镜像
+http://fduo.org/pip-gem-npm-chinese-mirror/
+</pre>
+<p>6. apt-get&#160;</p>
+<pre># /etc/apt/sources.list
+deb http://mirrors.163.com/ubuntu/ jammy main restricted universe multiverse
+deb http://mirrors.163.com/ubuntu/ jammy-security main restricted universe multiverse
+deb http://mirrors.163.com/ubuntu/ jammy-updates main restricted universe multiverse
+deb http://mirrors.163.com/ubuntu/ jammy-proposed main restricted universe multiverse
+deb http://mirrors.163.com/ubuntu/ jammy-backports main restricted universe multiverse
+deb-src http://mirrors.163.com/ubuntu/ jammy main restricted universe multiverse
+deb-src http://mirrors.163.com/ubuntu/ jammy-security main restricted universe multiverse
+deb-src http://mirrors.163.com/ubuntu/ jammy-updates main restricted universe multiverse
+deb-src http://mirrors.163.com/ubuntu/ jammy-proposed main restricted universe multiverse
+deb-src http://mirrors.163.com/ubuntu/ jammy-backports main restricted universe multiverse
+
+
+</pre>
