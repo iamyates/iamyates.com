@@ -1,0 +1,26 @@
+<p>refer to:&#160; <a href="https://4loc.wordpress.com/2009/05/29/eval-module_eval-and-instance_eval">https://4loc.wordpress.com/2009/05/29/eval-module_eval-and-instance_eval</a>
+</p>
+<p>eval: 上来就运行代码. &#160;例如:</p>
+<pre>eval(" a = 1;  puts a+1 ")  #=&gt; 2
+b = 3
+eval(" puts b")  # =&gt; 3
+@forty = 40
+eval(" puts @forty")  # =&gt; 40
+</pre>
+<p>instance_eval: 在某个instance的范围内运行代码. 可以直接使用 @ 变量.</p>
+<pre>class Apple
+  def color
+    @color
+  end
+end
+
+apple = Apple.new
+puts apple.color # =&gt;
+apple.instance_eval("@color = 'red'")
+puts apple.color
+
+</pre>
+<p>class_eval/module_eval: 针对某个 instance 的范围内(上下文内)运行代码. &#160;可以认为它俩一样. 注意:class_eval 不是为某个 class增加 &#160;class_method. &#160; &#160;</p>
+<p>class_exec /&#160;module_exec: &#160;针对某个Class/Module的范围内运行代码. 可以认为它俩一样. &#160;可以认为它俩跟 xx_eval 一样, 不同之处是它们接收的不是string 而是 block, 还可以加参数.&#160;
+</p>
+<p>可以认为 &#160;eval, self.instance_eval 都是一样的.&#160;</p>
