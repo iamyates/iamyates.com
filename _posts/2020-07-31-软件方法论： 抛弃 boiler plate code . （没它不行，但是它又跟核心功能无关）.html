@@ -1,0 +1,48 @@
+<p>想读一个文件：</p>
+
+<p><code>
+read "some_file.txt"   # 不懂编程，   和   编程了 10年+ 的人。
+</code>
+</p>
+<p>
+# 有一定编程基础/经验的人：
+</p>
+<pre>   BufferedReader br = new BufferedReader(new FileReader("file.txt"));
+    try {
+        StringBuilder sb = new StringBuilder();
+        String line = br.readLine();
+
+        while (line != null) {
+            sb.append(line);
+            sb.append(System.lineSeparator());
+            line = br.readLine();
+        }
+        String everything = sb.toString();
+    } finally {
+        br.close();
+    }
+</pre>
+
+<pre># 高级语言：
+a = 1 + 2 + 3 + 4.....
+</pre>
+# 汇编：
+<pre>DATAS SEGMENT
+     n   DW ?
+     sum DW ?
+     DISP DB 5 DUP('$')
+     MSG0 DB 'N=','$'
+     MSG1 DB 'SUM=','$'
+DATAS ENDS
+STACK SEGMENT PARA STACK 'STACK'
+      DW 200 DUP (?)
+STACK ENDS
+CODES SEGMENT
+     ASSUME CS:CODES,DS:DATAS,SS:STACK
+     START:
+            MOV AX,STACK
+	    MOV SS,AX
+	    MOV SP,400
+            MOV AX,DATAS
+</pre>
+boilder plate code: 在所有语言里都有， 在 ruby, coffeescript,  (有可能还有CSS ？ ） 里是最少的。
