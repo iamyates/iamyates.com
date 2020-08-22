@@ -1,0 +1,5 @@
+<p>目前对于异常有两种处理： (there're 2 ways for exception process )&#160;</p>
+<p>1. 不处理。 直接抛出。让客户能看到，方便开发人员的处理。 典型的是使用exception_notification 这样的插件， 遇到异常，直接给开发人员邮件。 &#160;( just throw it so that developers could find what is happening very easily. in Rails 3, we use a rubygem named 'exception notification' )&#160;</p>
+<p>2. 处理这个异常。把它进行 begin... rescue (ruby ) 或者 try...catch (java) 这样的处理。 但是要记得把错误记录在日志中。 &#160; ( in ruby, we use begin/rescue and in java: try/catch block to make sure there's no error when exception thrown. but remember to log the errors into file )&#160;</p>
+<p>方案1 适合低访问量的网站。 &#160;因为优酷的访问量非常大，目前是每秒100个请求，所以一旦出错，每秒就发送x个邮件。对系统的资源影响很大。 所以第二个方案在这个情况下就特别合适了。 &#160;( plan 1 fits the websites that don't have huge visitors, because when exception thrown, the server would send many many emails per second which costs heavy system resources. so plan 2 is our choice , especially in youku.com, we have at least 100 req/s. &#160;)&#160;</p>
+<p>如果一旦使用了方案2， 要记得给出假数据。 &#160;保证客户端有内容可以取到。&#160;</p>
