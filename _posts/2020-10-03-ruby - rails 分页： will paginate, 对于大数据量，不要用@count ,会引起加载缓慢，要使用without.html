@@ -1,0 +1,4 @@
+<h3>前端erb 页面：&#160;</h3>
+<p>&lt;%= link_to_prev_page @trades, "上一页" %&gt;<br />&lt;%= link_to_next_page @trades, "下一页" %&gt;</p>
+<h3>后端controller:&#160; 调用.without_count 方法</h3>
+<p>@trades.page(params[:page]).per(1000).without_count</p>
