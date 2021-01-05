@@ -1,0 +1,75 @@
+<p>前些日子被内存泄露困扰，使用了一些办法。突然发现puma的版本用的还是3.x,&#160;&#160;果断切换到最新的5.1.1</p>
+<p>
+配置具体参考： <a href="https://github.com/puma/puma/blob/master/lib/puma/dsl.rb">https://github.com/puma/puma/blob/master/lib/puma/dsl.rb</a>
+看的时候，直接看方法定义即可。
+例如</p>
+<div><p>worker 1 的意思是啥，直接看上面 dsl.rb 的 def worker 方法即可。</p>
+<p>启动方式：&#160;</p>
+<p>bundle exec puma -C config/puma.rb&#160; &#160;( 注意， puma 5 的启动，去掉了 puma start 的形式，而是直接 puma )&#160;</p>
+<p>具体下面的配置文件，一定要看，跟puma3, puma4 最大的区别是， 不要使用&#160; daemon true, 否则会报错。</p>
+<p>另外，就是重启方式。&#160; <a href="https://github.com/puma/puma/blob/master/docs/restart.md">https://github.com/puma/puma/blob/master/docs/restart.md</a>
+</p>
+<pre># 完整的内容， 直接来这里看： https://github.com/puma/puma/blob/master/lib/puma/dsl.rb
+# puma 的最大和最小值
+threads 1, 4
+
+# 端口号
+port 19000
+
+# 运行环境, 默认是 development
+environment "production"
+#environment "development"
+
+app_dir = '/opt/app/new-admin/current'
+# 需要puma 运行时考虑的文件夹, 也就是rails, grape等的根目录
+directory app_dir
+
+# config.ru 文件所在路径
+rackup "#{app_dir}/config.ru"
+
+shared_dir = '/opt/app/new-admin/shared'
+
+# 需要多少个worker process 来运行，默认是0，对于主力应用，可以设置成cpu 核数
+# workers 1
+
+# 把当前server绑定到哪里。 tcp:// , unix:// 都可以。
+bind "unix://#{shared_dir}/sockets/puma.sock"
+
+# 日志输出到哪里
+stdout_redirect "#{shared_dir}/log/puma.stdout.log", "#{shared_dir}/log/puma.stderr.log", true
+
+# pid 文件位置
+pidfile "#{shared_dir}/pids/puma.pid"
+
+# state_文件位置
+state_path "#{shared_dir}/pids/puma.state"
+
+# 这个属性在puma3, 4中都有， puma 5就没有了。
+#daemonize true
+
+before_fork do
+  ActiveRecord::Base.connection_pool.disconnect! if defined?(ActiveRecord)
+end
+
+on_worker_boot do
+  ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
+end
+
+</pre>
+<h3>启动</h3>
+<p>bundle exec puma&#160; &#160;就可以了。 默认读取 config/puma.rb</p>
+<p>停止的话， kill 就可以了。</p>
+<h3>普通重启 （hot restart )&#160;</h3>
+<p>bundle exec pumactl restart&#160;</p>
+<p> 下面是 0 个worker 下的 重启，可以虽然发现 puma 5.1.1 主进程彻底重启了，但是进程的启动时间仍然在之前的时间 ( Dec17 )&#160;</p>
+<pre>checker   7318 10771  0 07:05 pts/6    00:00:00 grep --color=auto 21170
+checker  21170     1  0 Dec17 ?        00:00:06 puma 5.1.1 (tcp://0.0.0.0:19000,unix:///opt/xxx/shared/sockets/puma.sock) [20201211071518]
+</pre>
+<h3>不断线重启 phased-restart&#160;</h3>
+<p>bundle exec pumactl phased-restart -F config/puma5.rb&#160; （注意这里使用了 -F ，而不是 -C )&#160;</p>
+<p>下面是 phased-restart 之后的输出例子，可以发现， cluster worker重启了， 主进程 (puma 5.1.1 ) 没有重启</p>
+<pre>checker  21170     1  0 Dec17 ?        00:00:02 puma 5.1.1 (tcp://0.0.0.0:19000,unix:///opt/xxx/shared/sockets/puma.sock) [20201211071518]
+checker  22598 21170 18 06:59 ?        00:00:04 puma: cluster worker 0: 21170 [20201211071518]
+
+</pre>
+</div>
