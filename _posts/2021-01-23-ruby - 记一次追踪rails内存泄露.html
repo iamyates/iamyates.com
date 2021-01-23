@@ -1,0 +1,66 @@
+<p>1. 采用了 oink 工具,来测量不同的action对于内存的消耗, 运行2周之后, 查看日志,发现 内容如下
+</p>
+<pre>---- MEMORY THRESHOLD ----
+THRESHOLD: 75 MB
+
+-- SUMMARY --
+Worst Requests:
+1. Dec 03 10:26:15, 19091140 KB, managers/sessions#new
+2. Dec 03 10:22:44, 5642988 KB, managers/sessions#create
+3. Dec 03 10:16:11, 4153928 KB, disputes#index
+4. Dec 03 10:15:41, 4058000 KB, disputes#force_release
+5. Dec 03 10:17:30, 3744456 KB, managers/sessions#new
+6. Dec 03 10:17:03, 3737700 KB, disputes#force_release
+7. Dec 03 10:15:03, 3300212 KB, private/members#edit_inviter_code
+8. Dec 03 10:12:54, 2885724 KB, private/members#create_id_card
+9. Dec 03 10:13:11, 2339664 KB, managers/sessions#create
+10. Dec 03 10:14:24, 1155164 KB, private/members#show
+
+Worst Actions:
+40, private/actual_k_lines#index
+19, private/members#index
+16, managers/sessions#new
+11, private/members#edit
+6, scheduled_unlockings#import
+6, disputes#index
+5, private/managements#index
+3, managers/sessions#create
+2, private/members#create_id_card
+2, private/members#upload_id_card
+2, private/members#show
+2, disputes#show
+2, disputes#force_release
+2, private/members#update
+1, private/members#edit_inviter_code
+1, private/members#bind_assets_password_time
+1, private/system_variables#setting_manager_login_attemps
+1, private/internal_transfers#download_csv
+1, private/members#download_csv
+1, websockets#real_time_monitoring
+1, private/orders#index
+
+Aggregated Totals:
+Action                                                	Max(KB)	Mean	Min	Total	Number of requests
+managers/sessions#new                                  19091140	1648466	101340 26375460	16
+private/members#index                                 	1128612	452494	131072	8597392	19
+private/actual_k_lines#index                          	271284	206140	131072	8245636	40
+managers/sessions#create                              	5642988	2713917	159100	8141752	3
+disputes#force_release                                	4058000	3897850	3737700	7795700	2
+disputes#index                                        	4153928	1051313	195496	6307880	6
+private/members#edit                                  	522288	367929	131072	4047228	11
+private/members#edit_inviter_code                     	3300212	3300212	3300212	3300212	1
+private/members#create_id_card                        	2885724	1629162	372600	3258324	2
+private/members#show                                  	1155164	1145456	1135748	2290912	2
+scheduled_unlockings#import                           	262144	229376	131072	1376256	6
+private/members#update                                	907672	589478	271284	1178956	2
+private/managements#index                             	187828	123141	83460	615708	5
+private/members#upload_id_card                        	367224	302118	237012	604236	2
+disputes#show                                         	331928	248584	165240	497168	2
+private/internal_transfers#download_csv               	458752	458752	458752	458752	1
+private/members#download_csv                          	276980	276980	276980	276980	1
+private/system_variables#setting_manager_login_attemps	198664	198664	198664	198664	1
+websockets#real_time_monitoring                       	133128	133128	133128	133128	1
+private/orders#index                                  	132100	132100	132100	132100	1
+private/members#bind_assets_password_time             	131072	131072	131072	131072	1
+</pre>
+<p>2. 既然定位到了, 然后, 使用memory prof , 来查看这些内存到底用在了哪里.</p>
