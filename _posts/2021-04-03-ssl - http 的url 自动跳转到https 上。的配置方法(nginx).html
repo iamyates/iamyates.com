@@ -1,0 +1,43 @@
+<p>这样写就可以：</p>
+
+<pre class="hljs nginx"> <span class="hljs-title">server</span> {
+      <span class="hljs-title">listen</span> <span class="hljs-number">80</span>;
+      <span class="hljs-title">listen</span> [::]:<span class="hljs-number">80</span>;
+      <span class="hljs-title">server_name</span>  www.your_site.io your_site.io;
+      <span class="hljs-title">return</span> <span class="hljs-number">301</span> <span class="hljs-url">https://<span class="hljs-variable">$server_name</span><span class="hljs-variable">$request_uri</span></span>;
+  }
+
+<span class="hljs-comment"># 下面就是 server 443 的配置。。。</span>
+
+</pre>
+<p>如果希望所有的 @.a.com 都跳转到 www.a.com , 就这样：</p>
+<pre class="hljs nginx"><span class="hljs-comment"># 所有的 @ 都跳转到 www 域名</span>
+<span class="hljs-title">server</span> {
+  <span class="hljs-title">listen</span> <span class="hljs-number">443</span>;
+  <span class="hljs-title">server_name</span> xx.com xx.com.cn;
+  <span class="hljs-title">return</span> <span class="hljs-number">301</span> <span class="hljs-url">https://www.xx.com<span class="hljs-variable">$request_uri</span></span>;
+}
+</pre>
+<p>注意：</p>
+<p>有的url不能直接跳转，例如 RESTful 资源，上面的跳转从 POST 会变成GET ，这是不行的。</p>
+<p>所以要暂时:&nbsp;</p>
+
+<pre class="hljs nginx">  <span class="hljs-title">server</span> {
+      <span class="hljs-title">listen</span> <span class="hljs-number">80</span>;
+      <span class="hljs-title">listen</span> [::]:<span class="hljs-number">80</span>;
+      <span class="hljs-title">server_name</span> www.cadae.top cadae.top;
+<span class="hljs-comment">#      return 301 https://$server_name$request_uri;</span>
+      <span class="hljs-title">location</span> / {
+        <span class="hljs-title">return</span> <span class="hljs-number">301</span> <span class="hljs-url">https://<span class="hljs-variable">$server_name</span><span class="hljs-variable">$request_uri</span></span>;
+      }
+      <span class="hljs-title">location</span> /interface {
+        <span class="hljs-title">proxy_pass</span>          <span class="hljs-url">http://cadxx_servers</span>;  <span class="hljs-comment"># 这里就是你的后端服务器的proxy</span>
+        <span class="hljs-comment"># proxy_set_header    X-Forwarded-Proto https;</span>
+        <span class="hljs-title">proxy_set_header</span>    X-Forwarded-For <span class="hljs-variable">$proxy_add_x_forwarded_for</span>;
+        <span class="hljs-title">proxy_set_header</span>    X-Real-IP <span class="hljs-variable">$remote_addr</span>;
+        <span class="hljs-title">proxy_set_header</span>    Host <span class="hljs-variable">$http_host</span>;
+        <span class="hljs-title">proxy_next_upstream</span> http_502 http_504 <span class="hljs-built_in">error</span> timeout invalid_header;
+      }
+  }
+
+</pre>
