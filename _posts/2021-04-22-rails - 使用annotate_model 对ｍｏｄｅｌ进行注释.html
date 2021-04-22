@@ -1,0 +1,12 @@
+<p>参考：<a href="https://github.com/ctran/annotate_models">https://github.com/ctran/annotate_models</a>
+</p>
+<p>这个gem 会自动的在某个model下面，加上注释．　</p>
+<pre># == Schema Info
+#
+# Table name: trips
+#
+#  local           :geometry        point, 4326
+#  path            :geometry        line_string, 4326
+</pre>
+<p>但是我觉得好多余啊．　直接用mysql来看不更方便么？</p>
+<p>删掉的办法：　直接在Gemfile中，删掉　　gem 'annotate' 就可以了．</p>
