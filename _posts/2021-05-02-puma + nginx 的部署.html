@@ -1,0 +1,51 @@
+<p>puma 这个服务器第一次听说是在2012,2013年。　还在优酷的时候，当时的小弟　海龙在一个项目中开始使用它。</p>
+<p>由于我对于thin用的特别顺手，就没有估计到这个服务器。　直到今天。项目中需要使用websocket. 　thin 已经无法满足需求了。</p>
+<p>步骤：　</p>
+<p>1. 建立puma 的配置文件：</p>
+<pre>threads_count = 32
+threads 4, 32
+
+port 8888
+environment "production"
+
+app_dir = '/opt/app/www.yoursite.com/current'
+directory app_dir
+rackup "#{app_dir}/config.ru"
+
+shared_dir = '/opt/app/www.yoursite.com/shared'
+workers 8
+bind "unix://#{shared_dir}/sockets/puma.sock"
+stdout_redirect "#{shared_dir}/log/puma.stdout.log", "#{shared_dir}/log/puma.stderr.log", true
+pidfile "#{shared_dir}/pids/puma.pid"
+state_path "#{shared_dir}/pids/puma.state"
+daemonize true
+
+preload_app!
+
+before_fork do
+  ActiveRecord::Base.connection_pool.disconnect! if defined?(ActiveRecord)
+end
+
+
+on_worker_boot do
+  ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
+end
+
+
+# Allow puma to be restarted by `rails restart` command.
+plugin :tmp_restart
+
+on_restart do
+#  puts '== Restarting...'
+end
+
+</pre>
+<p>2. 建立好对应的shared 目录下的文件夹。　</p>
+<p>3. 在nginx中，制定一下 unix socket:&#160;</p>
+<pre>  upstream coiex_servers{
+         server unix:///opt/app/www.yoursite.io/shared/sockets/puma.sock fail_timeout=0;
+  }</pre>
+<p>就可以了。</p>
+<p>启动命令：bundle exec puma start -C config/puma.rb&#160;</p>
+<p>停止命令：kill -9&#160; &#160; Orz</p>
+<p>重启命令：bundle exec pumactl phased-restart</p>
