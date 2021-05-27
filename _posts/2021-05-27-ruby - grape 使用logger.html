@@ -1,0 +1,26 @@
+<p>用了Grape之后，才发现，这个东东是默认没有日志的．所以就看不到　每次请求耗费多长时间　( Completed in xxx ms )</p>
+<p>所以，有个Gem:&#160; <a href="https://github.com/aserafin/grape_logging">https://github.com/aserafin/grape_logging</a>
+</p>
+<p>1. Gemfile:&#160;</p>
+<p>gem 'grape_logging'</p>
+<p>2. 在每个grape　ＡＰＩ的方法前面，都要加上：</p>
+<pre> module APIv2
+   class Members &lt; Grape::API
+      # 下面两行，是　对　grape logger进行配置
+    use GrapeLogging::Middleware::RequestLogger,
+      instrumentation_key: 'my_grape_key'
+
+</pre>
+<p>3. 在　config/initializers/grape_logger.rb 中，增加内容：　</p>
+<pre>ActiveSupport::Notifications.subscribe('my_grape_key') do |name, starts, ends, notification_id, payload|
+  Rails.logger.info payload
+end
+</pre>
+<p>这样，grape就可以跟rails结合了，　我们可以看到新的日志如下：　</p>
+
+<pre>13:02:25 INFO: Started GET "/api/v2/members/me?public_key=123456&amp;signature=d17f01cacab129355f2c6d777aa4a457&amp;nonce=333&amp;a=1&amp;b=2&amp;d=&amp;g=" for 127.0.0.1 at 2018-06-04 13:02:25 +0800
+......
+13:02:25 INFO: {:status=&gt;200, :time=&gt;{:total=&gt;100.88, :db=&gt;7.6, :view=&gt;93.28}, :method=&gt;"GET", :path=&gt;"/api/v2/members/me", :params=&gt;{"public_key"=&gt;"123456", "signature"=&gt;"d17f01cacab129355f2c6d777aa4a457",
+"nonce"=&gt;"333", "a"=&gt;"1", "b"=&gt;"2", "d"=&gt;"", "g"=&gt;""}, :host=&gt;"localhost"}
+
+</pre>
