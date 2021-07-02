@@ -1,0 +1,18 @@
+<p>refer to:&#160;https://api.rubyonrails.org/classes/ActionMailer/Base.html</p>
+
+<pre>class NotifierMailer &lt; ApplicationMailer
+  def welcome(recipient)
+    attachments["free_book.pdf"] = File.read("path/to/file.pdf")
+    mail(to: recipient,
+         subject: "New account information",
+         content_type: "text/html",
+         body: "Hello there")
+  end
+endd</pre>
+<p>动态内容</p>
+<p>https://stackoverflow.com/questions/18591126/rails-mailer-custom-dynamic-content</p>
+<p>还是需要用view.&#160; 在view中， 使用 &lt;%= raw @dynamic_content %&gt; 即可。</p>
+<p>然后在mailer 中， （忽略没写完的from）</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220215_161350.png" /></p>
+<p>使用附件</p>
+<p>都是上面</p>
