@@ -1,0 +1,19 @@
+<p>refer to:&#160;https://www.bigbinary.com/blog/rails-5-makes-belong-to-association-required-by-default</p>
+<p>在目前的版本中(貌似 &gt;= Rails 5? ) 只要你写了belongs_to , 那么默认该列就是必须的.</p>
+<p>例如</p>
+<pre>class Apple
+   belongs_to :fruit
+end
+
+那么在 a = Apple.new  ,  a.save! 的时候,就会报错:  fruit 不能是空.
+解决办法:
+
+1. 要么设置好fruit
+2. 要么 这样:
+
+belongs_to :fruit, optional: true
+
+要么: (不建议)
+
+ Rails.application.config.active_record.belongs_to_required_by_default = true
+</pre>
