@@ -1,0 +1,29 @@
+<p>caddy: 一种类似于轻量nginx吧</p>
+<p>非常好玩，文件夹中： caddy 命令， CaddyFile </p>
+<p>配置CaddyFile即可。</p>
+<p>然后 ./caddy restart 就行。</p>
+<p>等同于nginx -s reload</p>
+<p>Caddy 与rails配合使用</p>
+1. rails 正常启动：
+<pre>bundle
+bundle exec rails webpacker:install
+bundle exec rake db assets:compile
+bundle exec rails s -p 3355
+</pre>
+然后caddy中增加：
+<pre>homeland.yoursite.com {
+  encode zstd gzip
+  root * /opt/app/homeland/current/public
+  file_server
+
+  @notStatic {
+     not file
+  }
+  reverse_proxy @notStatic 127.0.0.1:3355
+
+  header / {
+    Strict-Transport-Security "max-age=31536000"
+  }
+}
+
+</pre>
