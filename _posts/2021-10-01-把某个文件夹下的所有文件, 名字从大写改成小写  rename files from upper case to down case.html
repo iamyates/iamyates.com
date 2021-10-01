@@ -1,0 +1,2 @@
+<div><p># 把某个文件夹下的所有文件, 名字从大写改成小写.</p>Dir.glob("./**/*").sort{|x| x.size}.each do |name|<br />  x = name.split('/')<br />  newname = (x[0..-2] + [x[-1].downcase]).join('/')<br />  File.rename(name, newname)<br />end</div>
+<p>方法很巧妙, 把文件全名做个排序, 短的放在 前面, 可以保证文件夹存在.&#160;</p>
