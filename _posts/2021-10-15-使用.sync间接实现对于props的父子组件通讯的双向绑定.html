@@ -1,0 +1,39 @@
+<p>参考：<a href="https://cn.vuejs.org/v2/guide/components-custom-events.html#sync-%E4%BF%AE%E9%A5%B0%E7%AC%A6">https://cn.vuejs.org/v2/guide/components-custom-events.html#sync-%E4%BF%AE%E9%A5%B0%E7%AC%A6</a>
+</p>
+<p>.sync 不能直接实现 props的双向绑定， vuejs 2.0中仍然需要 child $emit,&#160; 然后调用parent中的方法。</p>
+<p>.sync 仅仅是一种HTML的缩写。例如;</p>
+<h3>Parent:&#160;</h3>
+<p>&lt;Child v-bind:title='title_in_parent' v-on:update:title='title=$event'&gt;&lt;/Child&gt;</p>
+<p>也可以简写成：&#160; （省略了&#160; v-on:update:title='title=$event'）</p>
+<p>&lt;Child v-bind:title.sync='title_in_parent' &gt;&lt;/Child&gt;<br />&lt;Child :title.sync='title_in_parent' &gt;&lt;/Child&gt;</p>
+<h3>Child:&#160;</h3>
+<pre>标签：
+&lt; input v-bind:title_in_child &gt;&lt;/input&gt;
+
+方法：
+data: {
+    return {
+       // 这个变量要声明， 基本是一个临时变量，作用是 绑定到  input 标签
+       title_in_child: ''
+    }
+},
+props: ['title']   // 这个是 property, 用来接收 Parent传递进来的参数
+watch: {
+    // child 中的title, 变量， 需要监听，一更新，立刻通知 parent， 触发对应的方法 update:title , 实现告知parent的功能
+    title_in_child: function(new_value){
+       this.$emit('update:title', new_value)
+    },
+    // parent传递进来的参数的值，需要监听， 一进来，立刻更新本地变量 title_in_child,
+    title: function(new_value) {
+        this.title_in_child = new_value
+    }
+}
+</pre>
+<p>总结</p>
+<p>Vuejs实在是一种有点奇怪的东东。 收到编程语言，运行环境的限制，</p>
+<p>Rails - ruby&#160; - rvm&#160;</p>
+<p>Spring - java - jvm&#160;</p>
+<p>Vuejs - javascript - 浏览器</p>
+<p>很多时候，我们看到的各种概念（双向绑定，通讯，props 一路向下，emit一路向上，），实际上都是为了能够在浏览器这个特殊的环境下，使用javascript语言，实现的vuejs框架而做的语法糖，</p>
+<p>编程的年头越长， 越感觉这种条条框框催生出了不少高大上的名词概念，</p>
+<p>如果以后能够给编程语言一种新的环境，那么编程语言可以更加简单优雅。</p>
