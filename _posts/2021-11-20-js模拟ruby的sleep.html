@@ -1,0 +1,19 @@
+
+<h3> 这个可以 </h3>
+<pre>      sleep(n_seconds){
+        return new Promise(resolve =&gt; setTimeout(resolve, n_seconds * 1000))
+      },
+
+      async init() {
+           await sleep(3)
+      }
+</pre>
+
+<h3> 这个也行： （注意 setTimeout中的resolve的写法。。。）</h3>
+<pre>        return new Promise( (resolve, reject) =&gt; {
+          setTimeout( () =&gt; {
+            resolve()
+          }, n_seconds * 1000)
+        })
+
+</pre>
