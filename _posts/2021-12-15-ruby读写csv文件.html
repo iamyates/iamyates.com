@@ -1,0 +1,14 @@
+<p>无语了，最近总遇到这个操作。发现自己从来没记录过。</p>
+<p>所以写一下吧。</p>
+<pre>  def save_to_csv(csv)
+    CSV.open("C:/ruby/logs.csv", "w") do |row|
+      row &lt;&lt; %w[name location dishes time]
+    end
+  end
+
+  def self.read_from_csv(csv)
+     CSV.foreach("C:/ruby/logs.csv") do |row|
+     puts row ['name', 'location', 'dishes', 'time']
+   end
+ end
+</pre>
