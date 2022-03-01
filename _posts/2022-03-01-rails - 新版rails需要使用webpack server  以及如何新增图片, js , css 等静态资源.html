@@ -1,0 +1,51 @@
+<p>refer to:&#160;https://guides.rubyonrails.org/webpacker.html</p>
+<p>新版rails出现了,之前没有用过webpack server,&#160;</p>
+<p>现在发现它的功能很强大,可以在 rails中直接使用 node module.&#160; 不需要browserfy了.</p>
+<h3>webpacker的使用</h3>
+<p>1.&#160; bundle exec rails webpack:install (凭记忆)</p>
+<p>2. 会生成一个配置文件 config/webpacker.yml&#160;</p>
+<pre>development:
+  &lt;&lt;: *default
+  compile: true
+  dev_server:
+    https: false
+    host: localhost
+    port: 3035   # 注意这个port
+
+</pre>
+<p>3. 然后就需要启动 rails server之前,先确定这个port,并启动服务:&#160;&#160;</p>
+<p>./bin/webpack-dev-server</p>
+<p>4. 然后再启动&#160; rails server 就可以了.</p>
+<h3>使用图片</h3>
+<p>1. 编辑&#160;/app/javascript/application.js</p>
+<p>+const importAll = (r) =&gt; r.keys().map(r)<br />+importAll(require.context('./images', false, /\.(png|jpe?g|svg)$/));</p>
+<p>2. 把图片放在 app/javascript/images 目录下</p>
+<p>3.&#160; 在 erb文件中,使用</p>
+<p>&lt;%= image_pack_tag('metamask.png' %&gt;</p>
+<h3>如何使用node module</h3>
+<p>1. 在package.json 中增加你想要的dependency&#160;</p>
+<p>2. npm install</p>
+<p>3. 在对应的js 文件中(注意是一个独立的js文件,不能是 erb中的script片段 例如app/javascript/application.js )&#160; &#160;</p>
+<p>增加对应的import即可</p>
+<pre>mport {
+  web3Accounts,
+  web3Enable,
+  web3FromAddress,
+  web3ListRpcProviders,
+  web3UseRpcProvider
+} from '@polkadot/extension-dapp';
+
+window.polka = {
+  web3Accounts,
+  web3Enable,
+  web3FromAddress,
+  web3ListRpcProviders,
+  web3UseRpcProvider
+}
+
+</pre>
+<p>然后,在对应的页面,直接 var a =&#160; web3Enable() 即可. (注意&#160; await 与 async 的使用,这个是题外话了)&#160;</p>
+<h3>跟asset pipeline的区别</h3>
+<p>应该是可以同时使用,互不干扰的.</p>
+<p>但是建议使用了一个就别用第二个,太容易混淆了.</p>
+<p>个人感觉可以使用node_module 这个太赞了.&#160;</p>
