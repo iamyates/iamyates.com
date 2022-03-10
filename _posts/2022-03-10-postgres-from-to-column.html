@@ -1,0 +1,4 @@
+<p>似乎原因是postgres不像mysql 这样可以在查询的时候把列明转义（加上&#160; `column_name` 这样的）</p>
+<p>所以 from,&#160; to 是SQL 的关键字</p>
+<p>hash是 ruby object的关键字。。（还是rails的。。不清楚了）</p>
+<p>否则会出现莫名其妙的错误，例如 TypeError ， 或者SQLError啥的，一通好猜。。。</p>
