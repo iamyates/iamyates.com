@@ -1,0 +1,840 @@
+<p>refer to: https://fly.io/docs/speedrun/</p>
+<p>fly.io 是一个类似于heroku, 是一个PAAS平台。 也就是说，目的是为了担任一部分的运维工作。 </p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_105941.png" /></p>
+<p>传统的方式：&#160; PUSH 代码 +&#160; 虚拟机</p>
+<p>fly.io , heroku 的方式：&#160; 在开发者的本地使用 命令行， 来上传代码和 启动服务器</p>
+<p>注册和登录：&#160; 略。 但是记得要验证邮箱。 否则会报错：Error You must verify your email address to activate your account. https://fly.io/dashboard/parallelid/billing</p>
+<p>记得要验证，否则后面无法使用</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_112013.png" /></p>
+<h3>安装 flyctl </h3>
+<p>curl -L https://fly.io/install.sh | sh</p>
+<pre>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  1415    0  1415    0     0   1185      0 --:--:--  0:00:01 --:--:--  1185
+######################################################################## 100.0%
+set channel to shell
+flyctl was installed successfully to /home/linlin/.fly/bin/flyctl
+Manually add the directory to your $HOME/.bash_profile (or similar)
+  export FLYCTL_INSTALL="/home/linlin/.fly"
+  export PATH="$FLYCTL_INSTALL/bin:$PATH"
+Run '/home/linlin/.fly/bin/flyctl --help' to get started
+
+</pre>
+<p>把上面的 export ... 内容， copy 到 ~/.bashrc 目录下， 重进一下terminal&#160; 就可以用&#160; flyctl 了。</p>
+<h3>命令行登录 </h3>
+<p>flyctl auth login</p>
+<pre>Opening https://fly.io/app/auth/cli/a3293d738c4daab0ded223b52e3e020b ...
+
+Waiting for session... Done
+successfully logged in as shensiwei@sina.com
+</pre>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_110232.png" /></p>
+<h3>把本地的一个简单的应用，部署到远程&#160;&#160; </h3>
+<p>例如一个sinatra 应用。 </p>
+<p>app.rb </p>
+<pre>#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+require 'sinatra'
+
+get '/' do
+  "&lt;h1&gt;Hello From Ruby on Fly!&lt;/h1&gt;"
+end
+
+get '/:name' do
+  "&lt;h1&gt;Hello From Ruby on Fly!&lt;/h1&gt;&lt;/br&gt;and hello to #{params[:name]}"
+end
+
+</pre>
+Gemfile: 
+<pre>source 'https://rubygems.org'
+
+ruby '3.1.0'
+gem 'sinatra'
+gem 'puma'
+</pre>
+<p>
+
+config.ru 
+</p>
+<pre>require './app.rb'
+
+run Sinatra::Application</pre>
+<h3>本地运行：</h3>
+<pre>$ rackup
+Puma starting in single mode...
+* Puma version: 5.6.4 (ruby 3.1.0-p0) ("Birdie's Version")
+*  Min threads: 0
+*  Max threads: 5
+*  Environment: development
+*          PID: 300873
+* Listening on http://127.0.0.1:9292
+* Listening on http://[::1]:9292
+Use Ctrl-C to stop</pre>
+<h3>在远程运行&#160;&#160; flyctl&#160; launch （正餐开始了）</h3>
+<div>这里会问： app name, organization, 部署到哪个地区（美国，法国。。。）</div>
+<pre> 
+Creating app in /workspace/test_fly.io/hello_sinatra
+Scanning source code
+Detected a Ruby app
+Using the following build configuration:
+        Builder: heroku/buildpacks:20
+? App Name (leave blank to use an auto-generated name): test-hi
+? Select organization: parallelid (parallelid)
+? Select region: hkg (Hong Kong, Hong Kong)
+Created app test-hi in organization parallelid
+Wrote config file fly.toml
+? Would you like to setup a Postgresql database now? No
+? Would you like to deploy now? Yes
+Deploying test-hi
+==&gt; Validating app configuration
+--&gt; Validating app configuration done
+Services
+TCP 80/443 ⇢ 8080
+Remote builder fly-builder-throbbing-dust-8031 ready
+==&gt; Building image with Buildpacks
+--&gt; docker host: 20.10.12 linux x86_64
+20: Pulling from heroku/buildpacks
+d5fd17ec1767: Pull complete <br />。。。还有好多内容
+</pre>
+<p>下面是继续来的内容： （大概耗时5分钟吧。）</p>
+<pre>f3d36f64365e: Pull complete 
+c40ad6f28bc3: Pull complete 
+4158046c38fd: Pull complete 
+ae6ac0afe66e: Pull complete 
+ecf09e23a9b8: Pull complete 
+982914e67c01: Pull complete 
+357fefdf9bc9: Pull complete 
+f1660bede629: Pull complete 
+bcbb9964778f: Pull complete 
+ad5d987158b1: Pull complete 
+210536913458: Pull complete 
+5527c4faf53d: Pull complete 
+87fedb7d6f85: Pull complete 
+c10fd1b9aa75: Pull complete 
+b0a4219d827e: Pull complete 
+09da55ac2274: Pull complete 
+5e9efba38b67: Pull complete 
+ad3978c5ff0a: Pull complete 
+263a9c3bd329: Pull complete 
+4b4fdc0a5936: Pull complete 
+7879deff42eb: Pull complete 
+34fa42dea80c: Pull complete 
+0ab11be9e73e: Pull complete 
+2348e050d739: Pull complete 
+75986aede264: Pull complete 
+ea4974e3e948: Pull complete 
+4c37f5287c70: Pull complete 
+9215aa0839f1: Pull complete 
+4f4fb700ef54: Pull complete </pre>
+<p>#   以上都是创建容器</p>
+<pre>Digest: sha256:2ef9a033b84acffd48ea4a9ac716b0ab47be9cc04b875dd3fa0fd46e8b94e229
+Status: Downloaded newer image for heroku/buildpacks:20
+20: Pulling from heroku/pack
+d5fd17ec1767: Already exists 
+f3d36f64365e: Already exists 
+c40ad6f28bc3: Already exists 
+b86fa585af3b: Pull complete 
+ca879fc9e9c4: Pull complete 
+Digest: sha256:637aa6614512b6bdf403d92f38f5bed6f18175ed04f1fdb1f6d33891d846f11a
+Status: Downloaded newer image for heroku/pack:20
+===&gt; DETECTING
+1 of 2 buildpacks participating
+heroku/ruby 0.1.3
+===&gt; ANALYZING
+Previous image with name "registry.fly.io/test-hi:cache" not found
+===&gt; RESTORING
+===&gt; BUILDING
+-----&gt; Installing bundler 2.2.21
+-----&gt; Removing BUNDLED WITH version in the Gemfile.lock
+-----&gt; Compiling Ruby/Rack
+-----&gt; Using Ruby version: ruby-3.1.0
+-----&gt; Loading Bundler Cache
+-----&gt; Installing dependencies using bundler 2.2.21
+       Running: BUNDLE_WITHOUT='development:test' BUNDLE_PATH=/layers/heroku_ruby/gems/vendor/bundle BUNDLE_BIN=vendor/bundle/bin BUNDLE_DEPLOYMENT=1 bundle install -j4
+       Fetching gem metadata from https://rubygems.org/....
+       Using bundler 2.3.3
+       Using ruby2_keywords 0.0.5
+       Fetching nio4r 2.5.8
+       Fetching rack 2.2.3.1
+       Fetching tilt 2.0.10
+       Fetching mustermann 1.1.1
+       Installing tilt 2.0.10
+       Installing mustermann 1.1.1
+       Installing rack 2.2.3.1
+       Installing nio4r 2.5.8 with native extensions
+       Fetching rack-protection 2.2.0
+       Installing rack-protection 2.2.0
+       Fetching sinatra 2.2.0
+       Installing sinatra 2.2.0
+       Fetching puma 5.6.4
+       Installing puma 5.6.4 with native extensions
+       Bundle complete! 2 Gemfile dependencies, 9 gems now installed.
+       Gems in the groups 'development' and 'test' were not installed.
+       Bundled gems are installed into `/layers/heroku_ruby/gems/vendor/bundle`
+       Bundle completed (7.48s)
+       Cleaning up the bundler cache.
+       Removing bundler (2.2.21)
+-----&gt; Detecting rake tasks
+
+
+===&gt; EXPORTING
+Adding layer 'heroku/ruby:env'
+Adding layer 'heroku/ruby:gems'
+Adding layer 'heroku/ruby:ruby'
+Adding 1/1 app layer(s)
+Adding layer 'launcher'
+Adding layer 'config'
+Adding layer 'process-types'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Setting default process type 'web'
+Saving registry.fly.io/test-hi:cache...
+*** Images (1b83ddfbeed6):
+      registry.fly.io/test-hi:cache
+      registry.fly.io/test-hi:deployment-1654140152
+Adding cache layer 'heroku/ruby:gems'
+--&gt; Building image done
+==&gt; Pushing image to fly
+The push refers to repository [registry.fly.io/test-hi]
+87dc756f0bc5: Pushed 
+a248e8c4fc0a: Pushed 
+195ce6778985: Pushed 
+1a6d637e209e: Pushed 
+fd941a6af848: Pushed 
+dcafa52b9be9: Pushed 
+a1e3b8b5e582: Pushed 
+0b9d6a2b9aef: Pushed 
+219a884327cf: Pushed 
+6c6007ce9a6d: Pushed 
+c2fb59d1c64c: Pushed 
+bf8cedc62fb3: Pushed 
+deployment-1654140152: digest: sha256:be1911e63320f67e076a25e15e88210e222cbac0de6c12b83fc097d90df12c94 size: 2826
+--&gt; Pushing image done
+Image: registry.fly.io/test-hi:deployment-1654140152
+Image size: 657 MB
+==&gt; Creating release
+
+Release v2 created
+
+You can detach the terminal anytime without stopping the deployment
+Monitoring Deployment
+
+v0 is being deployed
+
+1 desired, 1 placed, 1 healthy, 0 unhealthy [health checks: 1 total, 1 passing]
+--&gt; v0 deployed successfully
+</pre>
+<p>可以发现，在本地代码文件夹，会多出一个文件： fly.toml&#160; </p>
+<p>内容如下：</p>
+<pre># fly.toml file generated for test-hi on 2022-06-02T11:22:18+08:00
+
+app = "test-hi"
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[build]
+  builder = "heroku/buildpacks:20"
+
+[env]
+  PORT = "8080"
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+
+[[services]]
+  http_checks = []
+  internal_port = 8080
+  processes = ["app"]
+  protocol = "tcp"
+  script_checks = []
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = "connections"
+
+  [[services.ports]]
+    force_https = true
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "2s"
+</pre>
+<p>此时，后台就会多出一个app 来。&#160;&#160; </p>
+<p>可以看到他的 cpu 核心数目 等等。</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_113153.png" /></p>
+<p>点击上面的红框，就可以看到 该 部署（或者叫虚拟机)的详细情况，如下图所示：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_113436.png" /></p>
+<p>点击上图中的 hostname , （我们发现 fly 自动分配了一个 域名给我们使用&#160;&#160; &lt;app-name&gt;.fly.dev ）</p>
+<p>就可以查看我们刚才弄的 app 了。</p>
+<p>（根据官方文档，也可以使用命令行来打开 这个网址）</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_113251.png" /></p>
+<h3>如何部署 Rails 项目？</h3>
+<div>1. fly launch </div>
+<div>根据提示，选择各种项目，数据库，等</div>
+<div>2. fly deploy --remote-only</div>
+<div>这里要注意，可以先在本地运行一下 rake assets:precompile RAILS_ENV=production, 看看能否执行成功。</div>
+<div>其他的同上面的 sinatra</div>
+<h3>如何做部署&#160; flyctl deploy&#160; （前提：需要有个&#160; fly.toml 文件）</h3>
+<pre>linlin@linlin-i5:/workspace/test_fly.io/hello_sinatra$ flyctl  deploy
+==&gt; Verifying app config
+--&gt; Verified app config
+==&gt; Building image
+WARN Error connecting to local docker daemon: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/_ping": dial unix /var/run/docker.sock: connect: permission denied
+Remote builder fly-builder-throbbing-dust-8031 ready
+==&gt; Building image with Buildpacks
+--&gt; docker host: 20.10.12 linux x86_64
+20: Pulling from heroku/buildpacks
+Digest: sha256:2ef9a033b84acffd48ea4a9ac716b0ab47be9cc04b875dd3fa0fd46e8b94e229
+Status: Image is up to date for heroku/buildpacks:20
+20: Pulling from heroku/pack
+Digest: sha256:637aa6614512b6bdf403d92f38f5bed6f18175ed04f1fdb1f6d33891d846f11a
+Status: Image is up to date for heroku/pack:20
+===&gt; DETECTING
+1 of 2 buildpacks participating
+heroku/ruby 0.1.3
+===&gt; ANALYZING
+Restoring metadata for "heroku/ruby:gems" from app image
+Restoring metadata for "heroku/ruby:ruby" from app image
+Restoring metadata for "heroku/ruby:env" from app image
+===&gt; RESTORING
+Restoring data for "heroku/ruby:gems" from cache
+===&gt; BUILDING
+-----&gt; Installing bundler 2.2.21
+-----&gt; Removing BUNDLED WITH version in the Gemfile.lock
+-----&gt; Compiling Ruby/Rack
+-----&gt; Using Ruby version: ruby-3.1.0
+-----&gt; Loading Bundler Cache
+-----&gt; Installing dependencies using bundler 2.2.21
+       Running: BUNDLE_WITHOUT='development:test' BUNDLE_PATH=/layers/heroku_ruby/gems/vendor/bundle BUNDLE_BIN=vendor/bundle/bin BUNDLE_DEPLOYMENT=1 bundle install -j4
+       Using bundler 2.3.3
+       Using ruby2_keywords 0.0.5
+       Using mustermann 1.1.1
+       Using nio4r 2.5.8
+       Using puma 5.6.4
+       Using rack 2.2.3.1
+       Using rack-protection 2.2.0
+       Using tilt 2.0.10
+       Using sinatra 2.2.0
+       Bundle complete! 2 Gemfile dependencies, 9 gems now installed.
+       Gems in the groups 'development' and 'test' were not installed.
+       Bundled gems are installed into `/layers/heroku_ruby/gems/vendor/bundle`
+       Bundle completed (0.30s)
+       Cleaning up the bundler cache.
+       Removing bundler (2.2.21)
+-----&gt; Detecting rake tasks
+
+
+===&gt; EXPORTING
+Reusing layer 'heroku/ruby:env'
+Adding layer 'heroku/ruby:gems'
+Reusing layer 'heroku/ruby:ruby'
+Reusing 1/1 app layer(s)
+Reusing layer 'launcher'
+Reusing layer 'config'
+Reusing layer 'process-types'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Setting default process type 'web'
+Saving registry.fly.io/test-hi:cache...
+*** Images (0f36fca80010):
+      registry.fly.io/test-hi:cache
+      registry.fly.io/test-hi:deployment-1654141089
+Adding cache layer 'heroku/ruby:gems'
+--&gt; Building image done
+==&gt; Pushing image to fly
+The push refers to repository [registry.fly.io/test-hi]
+87dc756f0bc5: Layer already exists 
+a248e8c4fc0a: Layer already exists 
+195ce6778985: Layer already exists 
+1a6d637e209e: Layer already exists 
+fd941a6af848: Layer already exists 
+a0f4f5bc238a: Pushed 
+a1e3b8b5e582: Layer already exists 
+0b9d6a2b9aef: Layer already exists 
+219a884327cf: Layer already exists 
+6c6007ce9a6d: Layer already exists 
+c2fb59d1c64c: Layer already exists 
+bf8cedc62fb3: Layer already exists 
+
+
+deployment-1654141089: digest: sha256:421bfd41aeac1a845f2c04ae5bfe05d6c99cd4d6733f960264d3aa06a4bcad78 size: 2826
+--&gt; Pushing image done
+image: registry.fly.io/test-hi:deployment-1654141089
+image size: 657 MB
+==&gt; Creating release
+--&gt; release v1 created
+
+--&gt; You can detach the terminal anytime without stopping the deployment
+==&gt; Monitoring deployment
+
+ 1 desired, 1 placed, 1 healthy, 0 unhealthy [health checks: 1 total, 1 passing]
+--&gt; v1 deployed successfully  （注意刚才是 V0 ）
+</pre>
+<p>现在新的部署，在后台也可以看到了：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_114222.png" /></p>
+<p>其他的命令：</p>
+<h3> flyctl info 查看节点的信息  耗时10秒</h3>
+<pre>App
+  Name     = test-hi          
+  Owner    = parallelid       
+  Version  = 0                
+  Status   = running          
+  Hostname = test-hi.fly.dev  
+
+Services
+PROTOCOL PORTS                   
+TCP      80 =&gt; 8080 [HTTP]       
+         443 =&gt; 8080 [TLS, HTTP] 
+
+IP Adresses
+TYPE ADDRESS           REGION CREATED AT 
+v4   109.105.221.56           10m54s ago 
+v6   2a09:8280:1::424a        10m53s ago 
+</pre>
+<h3> flyctl status 查看节点状态，  耗时10秒 </h3>
+<pre>App
+  Name     = test-hi          
+  Owner    = parallelid       
+  Version  = 1                
+  Status   = running          
+  Hostname = test-hi.fly.dev  
+
+Deployment Status
+  ID          = 7b5f7fa7-9622-1507-a4e3-251203b7864b         
+  Version     = v1                                           
+  Status      = successful                                   
+  Description = Deployment completed successfully            
+  Instances   = 1 desired, 1 placed, 1 healthy, 0 unhealthy  
+
+Instances
+ID      	PROCESS	VERSION	REGION	DESIRED	STATUS 	HEALTH CHECKS     	RESTARTS	CREATED   
+4b85040c	app    	1      	hkg   	run    	running	1 total, 1 passing	0       	3m53s ago	</pre>
+<h3>设置ssl 域名</h3>
+<p>点击左侧的 certificates, 输入咱们的域名， 然后点击View, 根据提示进行配置：<img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_115425.png" /></p>
+<p>点击后是这样：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_115657.png" /></p>
+<h3>deploy 之前： 不要使用 HTTP_PROXY,&#160; HTTPS_PROXY 这样的东东</h3>
+<p>会直接导致无法部署，因为proxy是不会正确识别 fly.io的各种服务器和IPV6地址的</p>
+<h3>deploy;&#160; 使用日志</h3>
+<p>LOG_LEVEL=debug fly deploy --remote-only&#160; 务必 加上这个LOG_LEVEL=debug</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_163040.png" /></p>
+<h3>务必保证在你的本地是可以运行生产模式的。 rails s -e production</h3>
+<div>一定要保证这一点，否则fly.io会报错。 而且报错的位置不同</div>
+<div>有的是在 console中报错的，有的是在web 页面中的dashboard 报错的。</div>
+<div><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_181937.png" /></div>
+<h3>遇到卡住的问题怎么办？&#160; fly.io Error error connecting to docker: remote builder app unavailable</h3>
+<p>往往是由于 builder 所在的region跟当前app的region不是一个造成的。</p>
+<p>解决办法： 删掉这个builder, </p>
+<p>https://community.fly.io/t/deployment-issue-remote-builder-app-unavailable/5126/7</p>
+<h3>遇到问题怎么办？&#160; 看日志，拆分命令</h3>
+<p>1. 先是看到这个错误，完全没有头绪：</p>
+<pre> =&gt; ERROR [gems 3/3] RUN bundle install &amp;&amp;  rm -rf vendor/bundle/ruby/*/cache                                                                                                          0.9s
+------
+ &gt; [gems 3/3] RUN bundle install &amp;&amp;  rm -rf vendor/bundle/ruby/*/cache:
+#16 0.926 Your Ruby version is 3.1.1, but your Gemfile specified 3.1.0
+------
+DEBUG result image:&lt;nil&gt; error:error building: executor failed running [/bin/bash -c bundle install &amp;&amp;  rm -rf vendor/bundle/ruby/*/cache]: exit code: 18
+Error error building: executor failed running [/bin/bash -c bundle install &amp;&amp;  rm -rf vendor/bundle/ruby/*/cache]: exit code: 18</pre>
+<p>然后，我们就把对应的Dockerfile 做个改动， 只运行一个：</p>
+<p>-RUN bundle install &amp;&amp;  rm -rf vendor/bundle/ruby/*/cache<br />+#RUN bundle install &amp;&amp;  rm -rf vendor/bundle/ruby/*/cache<br />+RUN bundle install --verbose&#160; （现在使用了这个 --verbose 参数）</p>
+<p>然后我们就看到原因了，是ruby版本号不对。</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_171900.png" /></p>
+<p>连接 fly.io 上的postgres 数据库</p>
+<p>flyctl postgres connect -a &lt;nft-contract-api-db&gt; </p>
+<p>后面的是db的名字， 也就是app name,&#160; 在后台中可以看到。</p>
+<p>连到之后， 就是正常的postgres操作了。</p>
+<p>默认： 会产生一个 数据库，名称和app name 是一样的。记得修改&#160; config/database.yml ( 在 dockerfile 中）</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220602_174448.png" /></p>
+<p>例如增加下面这句</p>
+<p> 82<br /> 83 COPY . .<br /> 84 COPY ./config/database.yml.fly.io ./config/database.yml<br /> 85<br /> 86 RUN bundle exec rails assets:precompile</p>
+<h3>如何部署Rails 应用？ </h3>
+
+<p>为Rails项目增加 fly.toml ，内容如下：</p>
+<pre># fly.toml file generated for pns-nft-contract-api on 2022-06-02T15:37:11+08:00
+
+app = "pns-nft-contract-api"
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[build]
+
+  [build.args]
+    BUNDLER_VERSION = "2.3.3"
+    NODE_VERSION = "14"
+    RUBY_VERSION = "3.1.1"
+
+[deploy]
+  release_command = "bundle exec rails db:migrate"
+
+[env]
+  PORT = "8080"
+  SERVER_COMMAND = "bundle exec puma -C config/puma.rb"
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+
+[[services]]
+  http_checks = []
+  internal_port = 8080
+  processes = ["app"]
+  protocol = "tcp"
+  script_checks = []
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = "connections"
+
+  [[services.ports]]
+    force_https = true
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "2s"
+
+[[statics]]
+  guest_path = "/app/public"
+  url_prefix = "/"
+</pre>
+<h3>如何部署静态网页？ https://fly.io/docs/getting-started/static/</h3>
+<p>1. 把项目在本地成功 </p>
+<p>yarn install&#160;&#160; </p>
+<p>yarn dev&#160; </p>
+<p>yarn build </p>
+<p>就会得到静态文件夹， 有的是dist, 有的是 public, 有的是 build , 叫法不一样。</p>
+<p>2. 创建Dockerfile&#160; （因为fly.io 需要用gostatic 来运行， 注意下面的COPY后面的参数，必须是正确的&#160; (public, dist... ) ）</p>
+<pre>FROM pierrezemb/gostatic
+COPY ./public/ /srv/http/</pre>
+<p>3. flyctl launch</p>
+<p>做一系列选择，填写app 的名称（这个最重要） 会生成一个 fly.toml文件。 </p>
+(一定要先有Dockerfile , 再 生成 fly.toml , 否则生成的fly.toml 中包含了build 模块，会导致占用大量的时间和空间，
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220603_083032.png" /></p>
+<p>另外，需要修改 fly.toml中的 端口为8043, 因为gostatic 会用这个端口，而不是8080 .</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220603_090705.png" /></p>
+<p>4. flyctl deploy</p>
+<p>对于静态文件，部署需要一些时间（还是会生成一个docker的。所以需要等一会儿）</p>
+<h3>部署静态文件的完整日志 （大概5分钟吧。主要是传140MB的内容到docker ）</h3>
+<pre>Run "flyctl version update" to upgrade.
+==&gt; Verifying app config
+--&gt; Verified app config
+==&gt; Building image
+==&gt; Creating build context
+--&gt; Creating build context done
+==&gt; Building image with Docker
+--&gt; docker host: 20.10.14 linux x86_64
+[+] Building 196.5s (0/1)
+[+] Building 3.6s (6/6) FINISHED
+ =&gt; [internal] load remote build context                                                                                                                                               0.0s
+ =&gt; copy /context /                                                                                                                                                                    2.6s
+ =&gt; [internal] load metadata for docker.io/pierrezemb/gostatic:latest                                                                                                                  0.0s
+ =&gt; [1/2] FROM docker.io/pierrezemb/gostatic                                                                                                                                           0.0s
+ =&gt; CACHED [2/2] COPY ./dist/ /srv/http/                                                                                                                                               0.0s
+ =&gt; exporting to image                                                                                                                                                                 0.1s
+ =&gt; =&gt; exporting layers                                                                                                                                                                0.0s
+ =&gt; =&gt; writing image sha256:abfc075dad86d2c22dca16fa3970a8ac63b19160d6e07281252b2c850f6a060a                                                                                           0.0s
+ =&gt; =&gt; naming to registry.fly.io/web3profile-h5:deployment-1654218710                                                                                                                  0.0s
+--&gt; Building image done
+==&gt; Pushing image to fly
+The push refers to repository [registry.fly.io/web3profile-h5]
+f182eeeabdec: Layer already exists
+f347b3d1982a: Layer already exists
+deployment-1654218710: digest: sha256:6a3aeee76e2cf842ebc892ef33a7fcff58c500ef49c021a81d876c7a514d5aaf size: 739
+--&gt; Pushing image done
+image: registry.fly.io/web3profile-h5:deployment-1654218710
+image size: 5.5 MB
+==&gt; Creating release
+--&gt; release v3 created
+
+--&gt; You can detach the terminal anytime without stopping the deployment
+==&gt; Monitoring deployment
+
+ 1 desired, 1 placed, 1 healthy, 0 unhealthy
+--&gt; v3 deployed successfully
+
+</pre>
+<h3>如何查看log？ </h3>
+<p>flyctl logs</p>
+<h3>如何 登录SSH？</h3>
+<p>flyctl ssh console&#160; 即可（前提是 这个APP需要成功运行起来）进入后跟linux的操作系统一样的。</p>
+<p>WORKDIR /app&#160;&#160; 这个是dockerfile中定义的内容。</p>
+<p>所以我们 ssh 之后，来这里就可以看到了&#160; </p>
+<h3>1234? 6789? 这个是啥APP？</h3>
+<p>是临时性的app, 直接删掉就好</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220603_083406.png" /></p>
+<h3>附录：一个完整的deploy 日志</h3>
+<pre>==&gt; Verifying app config
+--&gt; Verified app config
+==&gt; Building image
+Remote builder fly-builder-late-smoke-2823 ready
+==&gt; Creating build context
+--&gt; Creating build context done
+==&gt; Building image with Docker
+--&gt; docker host: 20.10.12 linux x86_64
+[+] Building 220.7s (0/1)
+[+] Building 68.1s (25/25) FINISHED
+ =&gt; [internal] load remote build context                                                                                                                                               0.0s
+ =&gt; copy /context /                                                                                                                                                                    3.8s
+ =&gt; resolve image config for docker.io/docker/dockerfile:experimental                                                                                                                  2.3s
+ =&gt; CACHED docker-image://docker.io/docker/dockerfile:experimental@sha256:600e5c62eedff338b3f7a0850beb7c05866e0ef27b2d2e8c02aa468e78496ff5                                             0.0s
+ =&gt; [internal] load metadata for quay.io/evl.ms/fullstaq-ruby:3.1.1-jemalloc-slim                                                                                                      0.8s
+ =&gt; [base 1/6] FROM quay.io/evl.ms/fullstaq-ruby:3.1.1-jemalloc-slim@sha256:20d3c380783dd570b6258230425d6fa9f3d7b5891a18f738e3a1bf432ba71c9d                                           0.0s
+ =&gt; CACHED [base 2/6] RUN mkdir /app                                                                                                                                                   0.0s
+ =&gt; CACHED [base 3/6] WORKDIR /app                                                                                                                                                     0.0s
+ =&gt; CACHED [base 4/6] RUN mkdir -p tmp/pids                                                                                                                                            0.0s
+ =&gt; CACHED [base 5/6] RUN curl https://get.volta.sh | bash                                                                                                                             0.0s
+ =&gt; CACHED [base 6/6] RUN volta install node@14 &amp;&amp; volta install yarn                                                                                                                  0.0s
+ =&gt; CACHED [stage-4 1/6] RUN --mount=type=cache,id=prod-apt-cache,sharing=locked,target=/var/cache/apt     --mount=type=cache,id=prod-apt-lib,sharing=locked,target=/var/lib/apt       0.0s
+ =&gt; CACHED [build_deps 1/1] RUN --mount=type=cache,id=dev-apt-cache,sharing=locked,target=/var/cache/apt     --mount=type=cache,id=dev-apt-lib,sharing=locked,target=/var/lib/apt      0.0s
+ =&gt; CACHED [gems 1/3] RUN gem install -N bundler -v 2.3.3                                                                                                                              0.0s
+ =&gt; CACHED [gems 2/3] COPY Gemfile* ./                                                                                                                                                 0.0s
+ =&gt; CACHED [gems 3/3] RUN bundle install --verbose                                                                                                                                     0.0s
+ =&gt; CACHED [stage-4 2/6] COPY --from=gems /app /app                                                                                                                                    0.0s
+ =&gt; CACHED [node_modules 1/3] COPY package*json ./                                                                                                                                     0.0s
+ =&gt; CACHED [node_modules 2/3] COPY yarn.* ./                                                                                                                                           0.0s
+ =&gt; CACHED [node_modules 3/3] RUN if [ -f "yarn.lock" ]; then     yarn install;     elif [ -f "package-lock.json" ]; then     npm install;     else     mkdir node_modules;     fi     0.0s
+ =&gt; CACHED [stage-4 3/6] COPY --from=node_modules /app/node_modules /app/node_modules                                                                                                  0.0s
+ =&gt; [stage-4 4/6] COPY . .                                                                                                                                                             5.2s
+ =&gt; [stage-4 5/6] COPY ./config/database.yml.fly.io ./config/database.yml                                                                                                              0.0s
+ =&gt; [stage-4 6/6] RUN bundle exec rails assets:precompile                                                                                                                             45.3s
+ =&gt; exporting to image                                                                                                                                                                 8.3s
+ =&gt; =&gt; exporting layers                                                                                                                                                                8.3s
+ =&gt; =&gt; writing image sha256:4aa3d7d25ac59ece3e9a640a57d230679fd13bc923373200956d95a37adc9177                                                                                           0.0s
+ =&gt; =&gt; naming to registry.fly.io/-nft-contract-api:deployment-1654165275                                                                                                            0.0s
+--&gt; Building image done
+==&gt; Pushing image to fly
+The push refers to repository [registry.fly.io/-nft-contract-api]
+9acb33ddeb1b: Pushed
+bf3128364d17: Pushed
+19102a0d8c6b: Pushed
+8063bbc1d749: Layer already exists
+a41e0e24b7a9: Layer already exists
+94f3ecef538c: Layer already exists
+c6d66436c943: Layer already exists
+ecef848bb7c5: Layer already exists
+b076370e9539: Layer already exists
+5f70bf18a086: Layer already exists
+3baf9688bf6b: Layer already exists
+2bff5884c8b6: Layer already exists
+608f3a074261: Layer already exists
+deployment-1654165275: digest: sha256:51ae351d93b4540816abca559859406872e2df4a6c64b75af73dc5e58971fe42 size: 3053
+--&gt; Pushing image done
+image: registry.fly.io/nft-contract-api:deployment-1654165275
+image size: 829 MB
+==&gt; Creating release
+--&gt; release v3 created
+
+--&gt; You can detach the terminal anytime without stopping the deployment
+==&gt; Release command detected: bundle exec rails db:migrate
+
+--&gt; This release will not be available until the release command succeeds.
+         Starting instance
+         Configuring virtual machine
+         Pulling container image
+         Starting instance
+         Configuring virtual machine
+         Pulling container image
+         Unpacking image
+         Unpacking image
+         Configuring firecracker
+         Preparing kernel init
+         Configuring firecracker
+         Starting virtual machine
+         Starting init (commit: e3eb6d2)...
+         Setting up swapspace version 1, size = 512 MiB (536866816 bytes)
+         2022/06/02 10:28:20 listening on [fdaa:0:6bbf:a7b:acc:aad2:2e38:2]:22 (DNS: [fdaa::3]:53)
+         Starting virtual machine
+         Starting init (commit: e3eb6d2)...
+         Setting up swapspace version 1, size = 512 MiB (536866816 bytes)
+         no label, UUID=a808fe16-c2cd-42e7-ab1f-17c77247fb9e
+         2022/06/02 10:28:20 listening on [fdaa:0:6bbf:a7b:acc:aad2:2e38:2]:22 (DNS: [fdaa::3]:53)
+         Main child exited normally with code: 0
+         Starting clean up.
+         Main child exited normally with code: 0
+         Starting clean up.
+         Starting instance
+         Configuring virtual machine
+         Pulling container image
+         Unpacking image
+         Preparing kernel init
+         Configuring firecracker
+         Starting virtual machine
+         Starting init (commit: e3eb6d2)...
+         Setting up swapspace version 1, size = 512 MiB (536866816 bytes)
+         no label, UUID=a808fe16-c2cd-42e7-ab1f-17c77247fb9e
+         Preparing to run: `bundle exec rails db:migrate` as root
+         2022/06/02 10:28:20 listening on [fdaa:0:6bbf:a7b:acc:aad2:2e38:2]:22 (DNS: [fdaa::3]:53)
+         Main child exited normally with code: 0
+         Starting clean up.
+         Starting instance
+         Configuring virtual machine
+         Pulling container image
+         Unpacking image
+         Preparing kernel init
+         Configuring firecracker
+         Starting virtual machine
+         Starting init (commit: e3eb6d2)...
+         Setting up swapspace version 1, size = 512 MiB (536866816 bytes)
+         no label, UUID=a808fe16-c2cd-42e7-ab1f-17c77247fb9e
+         Preparing to run: `bundle exec rails db:migrate` as root
+         2022/06/02 10:28:20 listening on [fdaa:0:6bbf:a7b:acc:aad2:2e38:2]:22 (DNS: [fdaa::3]:53)
+         Main child exited normally with code: 0
+         Starting clean up.
+==&gt; Monitoring deployment
+
+ 1 desired, 1 placed, 1 healthy, 0 unhealthy [health checks: 1 total, 1 passing]
+--&gt; v3 deployed successfully</pre>
+<h3>部署Redis</h3>
+<p>redis是Rails项目必须用到的东东</p>
+<p>千万不要参考 官方文档&#160; https://fly.io/docs/reference/redis/ ，这个步骤会生成一个 有问题的 fly.toml&#160; ，无法完成部署</p>
+<p style="color: red">要参考这个： https://github.com/fly-apps/redis&#160; 后面其他的demo也都是一样的</p>
+<p>其实非常简单， 创建一个文件夹，例如叫 my_redis, 然后增加这个 fly.toml 文件；</p>
+ <pre>app = "siwei-redis"
+
+[build]
+  image = "flyio/redis:6.2.6"
+
+[mounts]
+  destination = "/data"
+  source = "redis_server"</pre>
+<h3>然后创建 volume: </h3>
+<p>flyctl volumes create redis_server --size 1&#160; （创建容量为1G的 名称为 redis_server 的volume）</p>
+<p>flyctl volumes list&#160; （ 查看 volume列表）</p>
+<p>然后为Redis创建 password </p>
+<p>fly secrets set REDIS_PASSWORD=siweidaydayup<br />fly secrets list</p>
+<p>flyctl deploy&#160; （可以看到大概20秒就部署成功了。如果一直卡在&#160; monitoring ... 那一步的时候，就要登录web console 去看出现的log 了）</p>
+<pre>fly deploy
+==&gt; Verifying app config
+--&gt; Verified app config
+==&gt; Building image
+Searching for image 'flyio/redis:6.2.6' locally...
+Searching for image 'flyio/redis:6.2.6' remotely...
+image found: img_98dgp8o90zlvxw05
+==&gt; Creating release
+--&gt; release v1 created
+
+--&gt; You can detach the terminal anytime without stopping the deployment
+==&gt; Monitoring deployment
+
+ 1 desired, 1 placed, 1 healthy, 0 unhealthy
+--&gt; v1 deployed successfully</pre>
+<p>登录 REDIS SSH：&#160; </p>
+<p>flyctl ssh console </p>
+<pre>/ # redis-cli -h siwei-redis.internal
+pns-redis.internal:6379&gt; auth (password)daydayup
+OK
+pns-redis.internal:6379&gt; keys *
+(empty array)
+</pre>
+<p>注意：以上步骤创建的是IP地址对外不公开的redis.&#160; 使用的地址是&#160;&#160; siwei-redis.internal&#160; </p>
+<p>如果要创建对外可以使用IP的话（推荐），可以用这个fly.toml: </p>
+<pre>app = "pns-redis"
+
+[build]
+  image = "flyio/redis:6.2.6"
+
+[mounts]
+  destination = "/data"
+  source = "redis_server"
+
+[[services]]
+internal_port = 6379
+protocol      = "tcp"
+
+  [[services.ports]]
+  port     = "6379"
+
+  [[services.tcp_checks]]
+  interval = 10000
+  timeout  = 2000</pre>
+<h3>使用fly.io 创建mongo&#160; （部署Docker）</h3>
+<div>参考： </div>
+<div>https://fly.io/docs/getting-started/dockerfile/&#160; 和</div>
+<div>https://community.fly.io/t/unable-to-connect-to-mongodb-instance/4837</div>
+<p>
+fly.io 官方中没有支持mongo的demo , 不过我们可以通过创建docker来创建mongo </p>
+<p>创建一个文件夹 fly.io.mongo</p>
+<p>进来， 创建文件&#160; Dockerfile </p>
+<pre>FROM mongo:latest</pre>
+<p>创建volume </p>
+<pre>flyctl volumes create mongodb --size 1
+</pre>
+<p>然后创建 fly.toml ， 内容如下；</p>
+<pre>app = "siwei-mongo"
+
+[build]
+  image = "mongo:5.0.6"
+
+[mounts]
+  destination = "/data/db"    # 这个很重要，mongodb的docker默认是放在 /data/db目录下的
+  source = "mongodb"
+
+[[services]]
+  internal_port = 27017
+  protocol      = "tcp"
+
+  # 想要允许外网访问的话，就把这个打开。
+  [[services.ports]]
+  port     = "64000"
+
+  [[services.tcp_checks]]
+  interval = 10000
+  timeout  = 2000</pre>
+<p>然后部署：</p>
+<p>$ fly deploy </p>
+<p>就可以发现，很快跑起来了。</p>
+<p>$ fly ssh console&#160; </p>
+<p>就可以登录了。</p>
+<h3>如何restore mongodb&#160;&#160; </h3>
+<div>使用 mongorestore --host=&lt;公共ip&gt; --port=&lt;端口&gt; --archive=&lt;file&gt; 就可以了</div>
+<div>前提是需要把mongo的 27017端口对外开放。</div>
+<p>fly wireguard create&#160;&#160;&#160; 可以创建一个wire tunnel ，会得到下面的内容：</p>
+<pre> fly wireguard create
+? Select organization: parallxxxx (paralxxx)
+Creating WireGuard peer "interactive-DESKTOP-GG23M21-shensiwei-sina-com-733" in region "hkg" for organization parallelid
+
+!!!! WARNING: Output includes private key. Private keys cannot be recovered !!!!
+!!!! after creating the peer; if you lose the key, you'll need to remove    !!!!
+!!!! and re-add the peering connection.                                     !!!!
+? Filename to store WireGuard configuration in, or 'stdout':  stdout
+
+[Interface]
+PrivateKey = t15Gk4qBOoGlwJff+wJzcqjxxx
+Address = fdaa:0:6bbf:a7b:9xxxx
+DNS = fdaa:0:6bbf::3
+
+[Peer]
+PublicKey = e1Yk8div9bnazZD7Mo48x8C+x2xxx
+AllowedIPs = fdaa:0:6bbf::/48
+Endpoint = hkg2.gatewaxxxxx
+PersistentKeepalive = 15
+</pre>
+<p>安装&#160; sudo apt install wireguard-tools openresolv&#160; （ 参考： https://fly.io/docs/reference/private-networking/）</p>
+<h3>关于网络问题</h3>
+<p>你的app叫啥名字，网络就是 xx.internal,&#160; 例如上面的redis,&#160; app = 'xx', 那么内网ip就是&#160; xx.internal,&#160; 可以被直接访问</p>
