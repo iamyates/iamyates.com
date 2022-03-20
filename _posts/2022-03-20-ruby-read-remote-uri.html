@@ -1,0 +1,10 @@
+<p> 注意: 该文件名称不要带有中文,否则需要escape </p>
+<pre>+    def read_remote_file url
++      require 'open-uri'
++      return URI.open(url).read
++    end</pre>
+<p>如果想转义的话,建议只对file-name做转义.不要对 http:// 转义,否则无法被URI.open 读取</p>
+<p>参考:https://stackoverflow.com/questions/68635238/undefined-method-encode-for-urimodule-with-gem-rspotify</p>
+<p>另外, ruby2, ruby3 的用法不同.&#160;</p>
+<p>ruby2:&#160; URI.encode&#160; &#160; URI.escape&#160; &#160;,&#160;</p>
+<p>ruby3:&#160; CGI.escape&#160; &#160;(需要 require 'cgi')&#160;</p>
