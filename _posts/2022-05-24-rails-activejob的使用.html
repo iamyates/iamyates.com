@@ -1,0 +1,21 @@
+<p>参考：https://guides.rubyonrails.org/v6.1/active_job_basics.html</p>
+<p>1. 需要一个redis server 运行在本地&#160; 6379端口（默认端口）</p>
+<p>2. 创建一个新的rails job </p>
+<pre>class SayHiJob &lt; ApplicationJob
+  queue_as :default
+
+  # 参数就是个普通的hash
+  def perform(args)
+    # 演示如何获得参数
+    name = args[:name]
+    # 如何执行代码
+    User.create ......
+  end
+end
+</pre>
+<p>3. 如何调用这个job </p>
+<p>wait的单位是 s&#160; , 也可以用 wait: 10.hours</p>
+<p>SayHiJob.set(wait: 10).perform_later({ name: 'jim', content: 'hello' })</p>
+<p>然后这个job就会自动执行了 (10s )之后。</p>
+<p>如果想立刻执行, 那么，就</p>
+<p>SayHiJob.perform_later({ name: 'jim', content: 'hello' })</p>
