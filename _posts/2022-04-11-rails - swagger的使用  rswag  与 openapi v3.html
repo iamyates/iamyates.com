@@ -1,0 +1,51 @@
+<p>refer to: https://medium.com/@clarkjohnson_85334/adding-swagger-docs-to-a-rails-6-api-using-rswag-a3e8bc577986</p>
+<p>rswag 官网:&#160;https://github.com/rswag/rswag/</p>
+<p>open api v3 官网:&#160;https://github.com/OAI/OpenAPI-Specification</p>
+<h3>如何看文档</h3>
+<p>看rswag官方文档搞不定，因为rswag这个项目默认大家是熟悉open apiv3 的
+</p>
+<p>open api v3&#160; 则需要慢慢的去看
+</p>
+<p>所以应该直接看 最上面的那个例子.
+</p>
+<p>安装
+</p>
+<p>感觉跟某个gem的版本似乎有关系。</p>
+<p>17年的时候用过swagger, 现在的版本跟当时的似乎不一样，当时可以直接生成？</p>
+<p>现在的话，是跟rspec绑定在一起的，通过分析rspec的controller的调用，来生成swagger.json / yaml</p>
+<p>然后在 /api-docs 页面显示</p>
+<p>安装:</p>
+<p>rails 6&#160;</p>
+<p>ruby 3.0.3&#160;</p>
+<p>创建一个新项目</p>
+<p>rails new test_swagger</p>
+<p>在Gem中增加如下内容</p>
+<pre>gem 'rswag'
+gem 'rswag-api'
+gem 'rswag-ui'
+
+group :test do
+   gem 'database_cleaner'
+   gem 'factory_bot_rails'
+   gem 'rspec-rails'
+   gem 'rswag-specs'
+ end
+
+</pre>
+<p><br />注意一定要有 rspec这个gem, 因为 rswag的文档是根据rspec的内容生成的.&#160;</p>
+<p>bundle install&#160; 安装好所有的gem</p>
+<p>生成 rspec</p>
+<p>rails g rspec:install</p>
+<p>再生成 rswag helper:&#160;</p>
+<p>rails g rswag&#160; &#160;(这个命令来自于 gem 'rswag' )</p>
+<p>上面命令没有的话(如果你按照官方文档操作,则肯定没有 )</p>
+<p>就运行下面2个命令</p>
+<p>rails g rswag:specs:install&#160; &#160;生成swagger_helper
+</p>
+<p>rails g rswag:api:install&#160; &#160; &#160;生成路由中的 /api-docs</p>
+<p>rails g rswag:ui:install&#160; &#160; &#160;同上,只不过这个也由swagger ui 处理.具体为啥一个路由能映射到2个action 我还没细看</p>
+<p>随便生成一个controller 的rswag ( 封装了rspec 的rswag测试文件), 内容如下</p>
+<p>rails generate rspec:swagger API::V1::Encounters_Controller</p>
+<p>内容如下</p>
+<p><br /> 2026  vim spec/requests/api/v1/encounters_spec.rb <br />2028  rails rswag:specs:swaggerize<br />2031  rails s  -p 30333</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220403_165557.png" /></p>
