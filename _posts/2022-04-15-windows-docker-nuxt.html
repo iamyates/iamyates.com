@@ -1,0 +1,16 @@
+<p>参考：</p>
+<p>https://nuxtjs.org/docs/configuration-glossary/configuration-watchers/</p>
+<p>https://webpack.js.org/configuration/watch/#watchoptions</p>
+<p>如果你的项目是个nuxt (webpacker）项目的话， 会发现windows下的docker中的文件改变之后，对应的项目没有reload</p>
+<p>我都无语了。</p>
+<p>浪费了我大半天</p>
+<p>最后线索来自于这里：</p>
+<p>https://github.com/nuxt/nuxt.js/issues/2481</p>
+<p>修改nuxt.config.js</p>
+<pre>  watchers: {
+    webpack: {
+      poll: true
+    }
+  },</pre>
+<p>太爽了</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220502_131652.png" /></p>
