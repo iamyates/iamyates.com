@@ -4,15 +4,13 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-喜欢美食，游戏，
-
 喜欢用Vim
 
-喜欢看日漫
+喜欢写Ruby, Rails
 
-喜欢看美女大长腿
+喜欢看漫画，科幻，游戏。
 
-喜欢写Ruby
+也喜欢看美女大长腿（直男）
 
 iamyates@sina.com
 
