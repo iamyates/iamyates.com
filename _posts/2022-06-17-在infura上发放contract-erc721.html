@@ -1,0 +1,293 @@
+<p>refer to: https://docs.infura.io/infura/tutorials/ethereum/deploy-a-contract-using-web3.js#2.-create-a-project-directory</p>
+<p>1. 创建一个项目文件夹，例如 </p>
+<p>/workspace/blockchain/contract_on_goerli_using_infura</p>
+<p>2. npm install web3 solc dotenv</p>
+<p>这样当前目录下会出现&#160; package.json 文件，内容如下</p>
+<pre>{
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "solc": "^0.8.14-fixed",
+    "web3": "^1.7.3"
+  }
+}</pre>
+<p>3. 创建一个 contract, 内容如下：&#160;&#160; Demo.sol</p>
+<pre>pragma solidity &gt;= 0.5.8;
+
+contract Demo {
+  event Echo (string message);
+
+  function echo(string calldata message) external {
+    emit Echo(message);
+  }
+}</pre>
+<p>4. 准备编译， 编译的话，手动操作很复杂很麻烦， 所以我们直接写一个脚本: compile.js </p>
+<pre>const fs = require('fs').promises;
+
+const solc = require('solc');
+
+// 这个方法需要修改， 入口文件名称 Demo.sol   和 生成的文件名称 Demo.json
+async function main(){
+  const sourceCode = await fs.readFile('Demo.sol', 'utf8');
+  const {abi, bytecode} = compile(sourceCode, 'Demo');
+  const artifact = JSON.stringify({ abi, bytecode}, null, 2);
+  await fs.writeFile('Demo.json', artifact);
+}
+
+// 这个方法不用改。拿过来用就好了
+function compile(sourceCode, contractName){
+  const input = {
+    language: 'Solidity',
+    sources: { main: { content: sourceCode} },
+    settings: {
+      outputSelection: {
+        '*': {
+          '*': ['abi', 'evm.bytecode']
+        }
+      },
+    },
+  }
+
+  const output = solc.compile(JSON.stringify(input));
+  const artifact = JSON.parse(output).contracts.main[contractName];
+  return {
+    abi: artifact.abi,
+    bytecode: artifact.evm.bytecode.object
+  };
+}
+
+main().then( () =&gt; process.exit(0) )</pre>
+<p>5. 运行 node compile.js&#160; 就可以编译了。得到 Demo.json ,内容如下：</p>
+<p>（可以看到，获得的是 abi 和 bytecode ，真正deploy的时候，用这个bytecode就足够了）</p>
+<pre>$ cat Demo.json
+{
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "name": "Echo",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "name": "echo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "608060405234801561001057600080fd5b506101fd806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c8063f15da72914610030575b600080fd5b61004a600480360381019061004591906100f8565b61004c565b005b7fdb84d7c006c4de68f9c0bd50b8b81ed31f29ebeec325c872d36445c6565d757c828260405161007d9291906101a3565b60405180910390a15050565b600080fd5b600080fd5b600080fd5b600080fd5b600080fd5b60008083601f8401126100b8576100b7610093565b5b8235905067ffffffffffffffff8111156100d5576100d4610098565b5b6020830191508360018202830111156100f1576100f061009d565b5b9250929050565b6000806020838503121561010f5761010e610089565b5b600083013567ffffffffffffffff81111561012d5761012c61008e565b5b610139858286016100a2565b92509250509250929050565b600082825260208201905092915050565b82818337600083830152505050565b6000601f19601f8301169050919050565b60006101828385610145565b935061018f838584610156565b61019883610165565b840190509392505050565b600060208201905081810360008301526101be818486610176565b9050939250505056fea2646970667358221220cd4858d1e016af1a21fc10e1a72faf5c472597f772f4397aa6ece1263538448c64736f6c634300080e0033"
+}</pre>
+<p>6. 发布. 这里写一个发布脚本 deploy.js&#160; 内容如下：</p>
+
+<pre>const Web3 = require('web3');
+
+const fs = require('fs')
+const {abi, bytecode} = JSON.parse(fs.readFileSync('Demo.json'))
+
+async function main(){
+  // step1. 初始化web3 , 根据某个rpc server endpoint
+  const network = process.env.ETHEREUM_NETWORK
+  const web3 = new Web3(
+    new Web3.providers.HttpProvider(
+      `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    )
+  )
+
+  // step2. 创建签名用的东东
+  const signer = web3.eth.accounts.privateKeyToAccount(
+    process.env.SIGNER_PRIVATE_KEY
+  )
+  web3.eth.accounts.wallet.add(signer)
+
+  // step3. 初始化contract
+  const contract = new web3.eth.Contract(abi)
+  contract.options.data = bytecode
+
+  // step4. 发布该 contract
+  const deployTx = contract.deploy()
+  const deployedContract = await deployTx
+    .send({
+      from: signer.address, // 这里用到了signer的address
+      gas: await deployTx.estimateGas()
+    })
+    .once('transactionHash', (txhash) =&gt; {
+      console.log("Mining deployment transaction ... ", txhash)
+      console.log(`https://${network}.etherscan.io/tx/${txhash}`)
+    })
+
+}
+
+require('dotenv').config()
+main()</pre>
+<p>7. 运行该脚本，内容如下：</p>
+<pre>$ node deploy.js
+Mining deployment transaction ...  0x2afbc8b3dc020a3bd562a4a7eb8ced66bb08e9a5489baad902516de39b0a2aaa
+https://goerli.etherscan.io/tx/0x2afbc8b3dc020a3bd562a4a7eb8ced66bb08e9a5489baad902516de39b0a2aaa</pre>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220615_101051.png" /></p>
+<p>8. 调用contract的方法 ,&#160; 参考： https://docs.infura.io/infura/tutorials/ethereum/call-a-contract</p>
+<p>创建文件 call.js&#160; 内容如下： </p>
+<pre>const Web3 = require('web3')
+
+const fs = require('fs')
+
+const { abi } = JSON.parse(fs.readFileSync('Demo.json'))
+
+async function main(){
+  const network = process.env.ETHEREUM_NETWORK
+
+  // step1. 初始化web3 实例，增加json rpc server
+  const web3 = new Web3(
+    new Web3.providers.HttpProvider(
+      `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    )
+  )
+
+  // step2. 创建signer
+  const signer = web3.eth.accounts.privateKeyToAccount(  process.env.SIGNER_PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(signer)
+
+  // step3. 创建contract, abi是关键
+  const contract = new web3.eth.Contract( abi, process.env.DEMO_CONTRACT)
+
+  // step4. 发起tx , 这里用到了签名
+  const tx = contract.methods.echo(" Hi hihihi ")
+  const receipt = await tx
+    .send({ from: signer.address, gas: await tx.estimateGas() })
+    .once("transactionHash" , (txHash) =&gt; {
+      console.info("mining transaction...", txHash)
+    })
+
+  console.info("mined in block: ", receipt.blockNumber)
+}
+
+require('dotenv').config()
+main()</pre>
+<p>9. 运行， 结果如下</p>
+<pre>node call.js
+mining transaction... 0x50b234ecd061fe5014129aa5ad3f823dc46addcb2f9450bea967e07c719b8ca9
+mined in block:  7061077</pre>
+<p>我们打开对应的网址，就可以查看到内容了：<br />https://goerli.etherscan.io/tx/0x50b234ecd061fe5014129aa5ad3f823dc46addcb2f9450bea967e07c719b8ca9</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220615_104117.png" /></p>
+<h3>如何调用contract的 getter(view) 方法？</h3>
+<p>const tx = await contract.methods.getNumber().call()&#160; </p>
+<p>就可以了。</p>
+<p>例如：</p>
+<pre>const Web3 = require('web3')
+
+const fs = require('fs')
+
+async function main(file_name_without_suffix, contract_address){
+  const { abi } = JSON.parse(fs.readFileSync(file_name_without_suffix+'.json'))
+  const network = process.env.ETHEREUM_NETWORK
+
+  // step1. 初始化web3 实例，增加json rpc server
+  const web3 = new Web3(
+    new Web3.providers.HttpProvider(
+      `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    )
+  )
+
+  // step2. 创建signer
+  const signer = web3.eth.accounts.privateKeyToAccount(  process.env.SIGNER_PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(signer)
+
+  // step3. 创建contract, abi是关键
+  const contract = new web3.eth.Contract( abi, contract_address)
+
+  const result = await contract.methods.getNumber().call()
+  console.info("== result: ", result)
+}
+
+require('dotenv').config()
+
+console.info("== 使用方式: $ node call.js TestContract 0xa1b2..z9   (该TestContract.json 和  必须存在)")
+main(process.argv[2], process.argv[3]).then( () =&gt; process.exit(0) )<br /><br />
+</pre>
+
+<p>运行方式： node call_getter_setter.js TestGetterSetter 0x8c76df0d7d98f93afc88ba871314582e25d58b42 </p>
+<p>TestGetterSetter.sol</p>
+<pre>// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity &gt;= 0.7.0 &lt; 0.9.0;
+
+contract TestGetterSetter {
+
+  uint256 number;
+
+  function setNumber(uint256 num) public {
+    number = num;
+  }
+
+  function getNumber() public view returns (uint256) {
+    return number;
+  }
+
+}</pre>
+<h3>调用 contract 的pure方法 （跟 view方法一模一样，都是 .method().call() ）</h3>
+<p>先弄一个 pure function ，例如：</p>
+<pre>cat TestPure.sol
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity &gt;= 0.7.0 &lt; 0.9.0;
+
+contract TestPure {
+  function doSum(uint a, uint b) public pure returns(uint){
+    return a + b ;
+  }
+}
+</pre>
+<p> 然后部署，调用：</p>
+<pre>$ cat call_pure_function.js
+const Web3 = require('web3')
+
+const fs = require('fs')
+
+async function main(file_name_without_suffix, contract_address){
+  const { abi } = JSON.parse(fs.readFileSync(file_name_without_suffix+'.json'))
+  const network = process.env.ETHEREUM_NETWORK
+
+  // step1. 初始化web3 实例，增加json rpc server
+  const web3 = new Web3(
+    new Web3.providers.HttpProvider(
+      `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    )
+  )
+
+  // step2. 创建signer
+  const signer = web3.eth.accounts.privateKeyToAccount(  process.env.SIGNER_PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(signer)
+
+  // step3. 创建contract, abi是关键
+  const contract = new web3.eth.Contract( abi, contract_address)
+
+  const tx = await contract.methods.doSum(300,4234234).call()
+  console.info("== tx: ", tx)
+}
+
+require('dotenv').config()
+
+console.info("== 使用方式: $ node call.js TestContract 0xa1b2..z9   (该TestContract.json 和  必须存在)")
+main(process.argv[2], process.argv[3]).then( () =&gt; process.exit(0) )</pre>
+<h3>event log 是啥？</h3>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220618_111730.png" /></p>
+<h3>如何验证Contract? </h3>
+<p>跟传统的etherscan.io上的验证一样， 点击contract url ,然后点击 contract&#160; 标签，verify的页面, </p>
+<p>根据提示来就好了</p>
+<p>需要注意的是：</p>
+<p>1. solcjs --version 就可以知道自己的编译器的版本 一般都是不优化</p>
+<p>2. 输入对应的源代码（或者json ）</p>
+<p>3. 选择对应的协议（一般是GPL 3，看你的源代码）</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220618_112100.png" /></p>
