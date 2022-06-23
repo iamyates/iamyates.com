@@ -1,0 +1,8 @@
+<p>
+current_xx 返回的是一个 Hash, 而不是一个model . 好奇怪啊
+</p>
+<p>解决办法；</p>
+<p>1. 删除cookie</p>
+<p>2. 重启rails server</p>
+<p>就可以了</p>
+<p>究其原因，应该是我同时在一个rails项目中同时使用2个model作为devise登录造成的</p>
