@@ -6,9 +6,11 @@ https://iamyates.com
 
 ## 使用
 
+```
 $ ruby -v # 3.x
 $ bundle install
 $ bundle exec jekyll serve --host 0.0.0.0
+```
 
 会生成一个 `_site` 文件夹，上传到远程即可。
 
