@@ -1,0 +1,57 @@
+<p>refer to: </p>
+<p><a href="https://web3js.readthedocs.io/en/v1.2.11/web3-eth-contract.html#deploy " target="_blank">https://web3js.readthedocs.io/en/v1.2.11/web3-eth-contract.html#deploy</a>
+</p>
+
+<pre>async function loadWeb3() {
+  if (window.ethereum) {
+    window.web3 = new Web3(window.ethereum);
+    window.ethereum.enable();
+  }
+}
+
+
+async function getCurrentAccount() {
+  const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+  return accounts[0];
+}
+
+async function deploy(){
+  await loadWeb3();
+
+  let abi = '&lt;%= raw @contract.contract_template.abi %&gt;'
+  let binary_code = "&lt;%= raw @contract.contract_template.binary_code %&gt;"
+
+  var myContract = new web3.eth.Contract(JSON.parse(abi));
+  const account = await getCurrentAccount();
+
+  myContract
+    .deploy({
+      data: "0x"+ binary_code,
+    })
+    .send(
+      {
+        from: account,
+      },
+      function(error, transactionHash){
+        if(error){
+          console.error(error)
+        }else{
+          console.info(transactionHash)
+        }
+      }
+    )
+
+    .on('error', function(error){ console.error(error) })
+    .on('transactionHash', function(transactionHash){
+      console.info(transactionHash)
+    })
+    .on('receipt', function(receipt){
+       console.log(receipt.contractAddress) // contains the new contract address
+    })
+    .on('confirmation', function(confirmationNumber, receipt){
+      console.info("== confirmation", confirmationNumber, receipt) }
+    )
+    .then(function(newContractInstance){
+      console.log(newContractInstance.options.address) // instance with the new contract address
+    })
+}</pre>

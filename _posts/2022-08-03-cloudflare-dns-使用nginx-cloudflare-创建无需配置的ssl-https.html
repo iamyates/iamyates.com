@@ -1,0 +1,26 @@
+<h3>传统的https的配置步骤是：</h3>
+<p>1. （在阿里云上） 购买ssl 证书</p>
+<p>2. 下载该证书文件到服务器（.key, .pem, .crt 等等）</p>
+<p>3. 在nginx中进行配置。(443 端口， ssl_file 等信息)</p>
+<h3>现在，使用cloudflare(免费) + 配置域名dns + nginx 80端口配置即可。</h3>
+<p>1. 在cloudflare上创建对应的site. </p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220708_065345.png" /></p>
+<p>2. 确保每个域名都是 proxied ， 这样才能让ssl 证书发挥 效果。</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220708_065537.png" /></p>
+<p>3. nginx 配置： 正常配置80端口即可。</p>
+<pre>server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        root /opt/app/aaa.com;
+
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name aaa.com www.aaa.com;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}</pre>
+<p>就可以实现 自动的 https访问了。</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220708_070656.png" /></p>

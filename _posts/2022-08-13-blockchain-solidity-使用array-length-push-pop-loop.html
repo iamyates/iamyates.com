@@ -1,0 +1,94 @@
+<p>refer to: https://www.tutorialspoint.com/solidity/solidity_arrays.htm</p>
+<p>https://docs.soliditylang.org/en/v0.8.15/types.html#array-members</p>
+<p>在Solidity中，array的长度(length) 都是固定的。跟其他静态语言的使用是一样的。</p>
+<h3>声明</h3>
+<p>上来就是个固定长度的： </p>
+<p>uint myArray[3] </p>
+<p>在声明的时候不确定长度：</p>
+<p>uint[] myArray; </p>
+<h3>初始化</h3>
+<p>下面2个是静态的初始化，作用一样：</p>
+<p>uint[] myArray = [1,2,3]</p>
+<p>uint[3] myArray = [1,2,3]</p>
+<p>下面这个是动态的初始化：</p>
+<p>uint size = 10</p>
+<p>address[] myAddresses = new address[](size) ;</p>
+<h3>对数组的赋值&#160;&#160;&#160; []=</h3>
+<p>对某个数组的 2+1 个元素赋值，新的值是 c:&#160;&#160; </p>
+<p>myArray[2] = 'c'&#160; </p>
+<h3>可用的变量 length (数组长度）, 方法： push（把某个element放到数组中）</h3>
+<p>uint[] myArray = [1,2,3]</p>
+<p>myArray.length&#160; ( 3) 见上面</p>
+<h3>push : </h3>
+<p>把元素放到数组的最后一位 ，注意：返回啥查询最新的文档</p>
+<p>myArray.push(4)&#160;&#160; </p>
+<h3>pop </h3>
+<p>可以把数组的最后一个元素给删掉， 数组长度 - 1&#160; ， 返回的内容查询最新的文档， 0.8.15 啥也不返回</p>
+<p>myArray.pop()</p>
+<h3>delete: </h3>
+<p>把某个元素的值变为 0 (严格的说这不是array的方法)</p>
+<h3>遍历一个数组</h3>
+<div>使用 for 循环 即可，跟js, c , java一样：</div>
+<pre>// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.0;
+
+contract TestArray {
+
+    event MyLog(int element);
+
+    function loopArray(int[] calldata numbers) external  {
+        for(uint i = 0; i &lt; numbers.length; i++ ) {
+            emit MyLog(numbers[i]);
+        }
+    }
+
+}</pre>
+<h3>编译，运行： （记得修改contract address ）</h3>
+<pre>// contract 地址要有
+const CONTRACT_ADDRESS = "0x5B481532279AbF29ba477cDa324656dc626113F8"
+// abi 要有
+const contractJson = require('./build/contracts/TestArray.json')
+
+module.exports = async function (callback) {
+  // web3 是Truffle的自动引入的对象
+  const contract = new web3.eth.Contract( contractJson.abi, CONTRACT_ADDRESS );
+
+  // 获得 network , 这个是根据参数传入的
+  const network = await web3.eth.net.getNetworkType()
+
+  const tx = contract.methods.loopArray([22,33,44])
+
+  // 发送！
+  const receipt = await tx
+  .send({
+    from: (await web3.eth.getAccounts())[0],// 使用了HD wallet中的第一个account
+    gas: await tx.estimateGas(),
+  })
+  .on('transactionHash', (txhash) =&gt; {
+    console.log(`Mining transaction ... network: ${network}, tx: ${txhash}`)
+  })
+  .on('error', function(error){
+    console.error(`An error happened: ${error}`)
+    callback()
+  })
+  .then(function(receipt){
+    console.log('====== events.MyLog: ', receipt.events.MyLog)
+    callback()
+  })
+
+}</pre>
+<p>结果：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220709_155243.png" /></p>
+<p>在 etherscan上看也是一样的。</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220709_155322.png" /></p>
+<h3>如何删掉某个元素，并且把array的长度减少1， （该数组的顺序会被打乱）</h3>
+<pre>uint[] internal array;
+
+// Move the last element to the deleted spot.
+// Remove the last element.
+function _burn(uint index) internal {
+  require(index &lt; array.length);
+  array[index] = array[array.length-1];
+  array.pop();
+}
+</pre>

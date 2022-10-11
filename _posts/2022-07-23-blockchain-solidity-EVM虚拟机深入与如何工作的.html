@@ -1,0 +1,66 @@
+<p>refer to: <br /><a href="https://medium.com/mycrypto/the-ethereum-virtual-machine-how-does-it-work-9abac2b7c9e " target="_blank">https://medium.com/mycrypto/the-ethereum-virtual-machine-how-does-it-work-9abac2b7c9e</a>
+</p>
+<p>EVM = Ethereum Virtual Machine, 以太坊虚拟机</p>
+<p>现在是用的 solidity, 之前用的是 Serpent, Mutan</p>
+<p>solidity 无法直接被EVM运行， sol文件会先被编译成 opcodes（低级机器指令）, 然后再被EVM运行。</p>
+<h3>Opcodes </h3>
+<p>目前有140个。 这些opcodes 可以让EVM实现途铃完整。 (turing complete) </p>
+<p>由于 opcode是一个 byte ( 8位 0/1 ) , 所以 opcodes最多是 256 ( 2^8 ) </p>
+<p>bit:&#160;&#160; 0/1&#160; </p>
+<p>byte :&#160; 8个bit&#160;&#160;&#160;&#160;&#160;&#160; 10001001 这样。</p>
+<p>分成下面几个大类：</p>
+<p>操作类： POP, PUSH,DUP, SWAP</p>
+<p>计算、比较类： ADD, SUB,GT, LT, OR, AND</p>
+<p>环境变量类： CALLER, CALLVALUE, NUMBER</p>
+<p>Memory 操作类： MLOAD, MSTORE, MSIZE</p>
+<p>Storage 操作类： SLOAD, SSTORE</p>
+<p>程序计数器类： JUMP, JUMPI, </p>
+<p>停止类： STOP, RETURN , REVERT, INVALID...</p>
+<p>下面是个完整列表：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220706_075447.png" /></p>
+<p>ByteCode: </p>
+<p>为了使用方便， Opcode 都会被转换成bytecode来使用。</p>
+<p>例如：0x 6001 6001 01</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220706_075634.png" /></p>
+<p>根据前表，我们可以知道 0x60 对应了PUSH1这个opcode , </p>
+<p>0x6001&#160; =&#160; PUSH1&#160; 1,</p>
+<p>0x6001 = PUSH1 1</p>
+<p>0x01 = ADD, 这个指令会把stack中的2个项目 做“加法”操作。 </p>
+<p>最后得到 2&#160; ( 0x02 ) </p>
+<h3>Contract State 智能合约的状态</h3>
+<p>高级编程语言可以直接把 参数 传入到某个方法中。</p>
+<p>但是 evm不行，它只能使用register stack&#160; （注册 stack ），它是256 bit的( 42 bytes )&#160; ，并且只能一次访问最近16个item. 最多的item限制是1024个</p>
+<p>所以，为了解决这种限制带来的问题，contract使用了memory 来保存数据， 但是memory 是保存在内存中的，无法持久化，所以 EVM使用了&#160; storage来持久化。 （等同于数据库， 读免费，写花钱）</p>
+<p>stack： function argument （方法的参数）</p>
+<p>memory :&#160;&#160; variable （变量）</p>
+<p>storage:&#160; data in DB. ( 读取免费，写入花钱， 写入的费用最多是读取的6000倍. 好像有点语病，暂且认为读取是基本免费的吧）</p>
+<h3>运行Contract的费用</h3>
+<p>由于每个人都可以运行、调用Contract, 所以会存在一种攻击：大量的调用网络上的资源，引起整个网络瘫痪。</p>
+<p>所以，每个opcode 都需要手续费。例如：</p>
+<p>keccak （重音在前面） 基本费用 30 gas&#160;&#160; 每个单词 6 gas </p>
+<p>每个 tx的基本调用费用， 最低21000 gas 起步。</p>
+<p>下面是opcode的调用费用列表： </p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220706_081247.png" /></p>
+<p>如果一些操作会减少state 的数量（减少了对 区块链的资源占用），EVM会返还 手续费(refund fee ), 例如 把某个storage 的value设置为0的话，返回15000gas,&#160; 删掉一个contract 则 返还 24000 gas . </p>
+<p>返还的手续费不会超过 整个手续费的50%。</p>
+<h3>部署合约的过程</h3>
+<p>部署的时候，发起的tx 不需要to address， 数据都在 input data中。 （转账附言）</p>
+<p>下面是一个例子：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220706_082017.png" /></p>
+<p>&#160;上图右侧中， 分成3个部分：</p>
+<p>1. constructor:&#160; 60806040526001600055348015601457600080fd5b5060358060226000396000f3fe</p>
+<p>这个的具体概念如下图所示： （我们了解即可）</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220706_082134.png" /></p>
+<p>以上代码是写入到storage中。</p>
+<p>2. run time: 6080604052600080fdfe</p>
+<p>写入到memory中。</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220706_082216.png" /></p>
+<p>3. （了解即可，目前是 实验性功能 ）metadata: 元数据&#160;&#160;&#160; a165627a7a723058204e048d6cab20eb0d9f95671510277b55a61a582250e04db7f6587a1bebc134d20029</p>
+<p>这个数据保存在去中心化的系统中， 叫做swarm hash, 或者 metadata file,&#160;&#160; 它只是被EVM生成，却不会像opcode那样被执行。</p>
+<p>他的格式是这样的： </p>
+<p>0xa1 0x65 'b' 'z' 'z' 'r' '0' 0x58 0x20 [32 bytes swarm hash] 0x00 0x29</p>
+<p>swarn hash中包含了其它的内容： 编译器的版本等。</p>
+<h3>反编译 bytecode</h3>
+<p>contract虽然被EVM编译为bytecode后会损失大量的信息，但是在大数据库下，还是很有可能被反编译的， 见： 4byte.directory&#160;</p>
+<h3>调用Contract </h3>
+<p>需要使用ABI， 具体略。</p>

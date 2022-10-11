@@ -1,0 +1,51 @@
+<p>refer to: <br /><a href="https://ethereum.stackexchange.com/questions/65589/return-a-mapping-in-a-getall-function " target="_blank">https://ethereum.stackexchange.com/questions/65589/return-a-mapping-in-a-getall-function</a>
+</p>
+<h3>声明</h3>
+<p>mapping(address =&gt; uint ) whiteList ;&#160; 用来声名， key是 address, value是 uint</p>
+<h3>使用</h3>
+<p>想要读取它的话，直接声明成 public </p>
+<p>无法声明一个function 返回mapping. </p>
+<p>对于某个之前不存在的key, 可以直接读取， 返回的 value值是 0 </p>
+<h3>[]= 与 [] </h3>
+<p>mapping['key'] 用来读取</p>
+<p>mapping['key']= 333 用来写入</p>
+<p>例子：</p>
+<pre>// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.0;
+
+contract TestMapping {
+
+    // 这里设置成 public 即可访问
+    mapping(address =&gt; uint) public whiteList;
+
+    function addToWhiteList(address tempAddress) external{
+        whiteList[tempAddress] = whiteList[tempAddress] + 1;
+    }
+
+}
+</pre>
+<p>下面是做不到的事儿：</p>
+<h3>做不到1： 遍历一个mapping的key </h3>
+<p>暂时无法“直接”办到，所以可以声明一个state 变量, (例如 address[] keys )&#160; 来保存每个存入mapping的key </p>
+<h3>做不到2： function return mapping&#160;</h3>
+<pre>    /*
+        这样写不行，我们无法直接return mapping
+
+    function getWhiteList() public view returns (mapping) {
+        return whiteList;
+    }
+    */
+</pre>
+<h3>做不到3： emit EventLog(mapping a )</h3>
+<pre>    event MyLog(mapping temp);
+
+    function addToWhiteList(address tempAddress) external{
+        whiteList[tempAddress] = whiteList[tempAddress] + 1;
+        // 这样写也不行。 无法进行 event 的emit
+        emit MyLog(whiteList);
+    }
+
+</pre>
+<h3>做不到4： 直接读取一个 public state mapping, </h3>
+<div>想要读取的话，每次都需要提供一个key </div>
+<div><img src="https://files.sweetysoft.com/blog_images/from_paste_20220709_162401.png" /></div>

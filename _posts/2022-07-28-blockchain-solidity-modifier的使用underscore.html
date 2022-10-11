@@ -1,0 +1,72 @@
+<p>refer to: <br /><a href="https://ethereum.stackexchange.com/questions/5861/are-underscores-in-modifiers-code-or-are-they-just-meant-to-look-cool " target="_blank">https://ethereum.stackexchange.com/questions/5861/are-underscores-in-modifiers-code-or-are-they-just-meant-to-look-cool</a>
+</p>
+<h3>modifier 就是一个function before hook, </h3>
+<p>1.&#160; _ 下划线表示被hook的方法内容。</p>
+<p>2.&#160; _ 可以出现多次</p>
+<p>3.&#160; modifier的执行顺序和出现顺序是一致的（上面的stackexchange中的的例子, 把各种内容都放到 message中，是特别厉害的）</p>
+<p>4. modifier 也可以出现多次</p>
+<h3>下面是一个例子：</h3>
+<pre>pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+
+contract VeryGoodNftWithMaxSupply is ERC721URIStorage {
+
+  uint256 private _currentId = 0;
+  address public rootAddress = address(0);
+  uint256 public _maxSupply = 10;
+
+  event Minted(address to, uint256 nftId, address minter);
+
+  modifier shouldLessThanMaxSupply(){
+    require(
+      _currentId &lt;= _maxSupply, "Reached max supply, no available nft left"
+    );
+    // 下划线表示被hook方法的内容。 会在编译、执行的时候做个替换
+    _;
+  }
+
+  constructor() ERC721("VeryGoodNftWithMaxSupply", "VGNWM") {
+    rootAddress = msg.sender;
+  }
+
+  function mint(address to) external shouldLessThanMaxSupply{
+    uint256 nftId = _currentId + 1;
+    _mint(to, nftId);
+    _currentId = nftId;
+    address from = msg.sender;
+    emit Minted(to, nftId, from);
+  }
+}</pre>
+<h3>一个function带有多个modifier: </h3>
+<pre>   //  执行顺序就是 checkOne,  checkTwo, checkThree, 然后才是方法体
+    function test() checkOne checkTwo checkThree returns (uint256) {
+        messages.push("test - 1");
+        testVariable = 345;
+        messages.push("test - 2");
+        return testVariable;
+    }</pre>
+<h3>可以把函数的参数传给modifier, </h3>
+<p>例如：</p>
+<pre>  // 这个modifier 有参数。<br />  modifier shouldInWhiteList(address to){
+    string memory message = string.concat("This address( ", Strings.toString(to), " ) is not in white list");
+    require( whiteList.include(to),  message);
+    _;
+  }
+<br />  // 这里包含多个modifier , 注意把函数的参数to  传递给了modifier
+  function mint(address to) external shouldLessThanMaxSupply shouldInWhiteList(to) {
+    uint256 nftId = _currentId + 1;
+    _mint(to, nftId);
+    _currentId = nftId;
+    address from = msg.sender;
+    emit Minted(to, nftId, from);
+  }</pre>
+<h3>modifier 需要在function的returns前面，</h3>
+<p>例如：</p>
+<pre>// 这是个external 方法
+function doSomeOperation(a,b) external modifier1 modifier2(b) returns(uint) {
+   return 10;
+}
+</pre>

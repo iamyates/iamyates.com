@@ -1,0 +1,8 @@
+<p>refer to: <br /><a href="https://unix.stackexchange.com/questions/446625/why-nohup-background-process-is-getting-killed " target="_blank">https://unix.stackexchange.com/questions/446625/why-nohup-background-process-is-getting-killed</a>
+</p>
+<p>貌似在最新的版本（ubuntu 20 + ）中，仅仅使用 nohup ... &amp; 是不行的</p>
+<p>解决办法： 前面加上 setsid </p>
+<p>增加 setsid 之前：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220719_112951.png" /></p>
+<p>加了 setsid 之后：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220719_113053.png" /></p>

@@ -1,0 +1,30 @@
+<div>refer to:&#160; <br /><a href="https://stackoverflow.com/questions/18289152/what-does-a-double-splat-operator-do " target="_blank">https://stackoverflow.com/questions/18289152/what-does-a-double-splat-operator-do</a>
+</div>
+<p>* : 叫做 splat operator</p>
+<p>**:&#160; double splat operator</p>
+<h3>single splat 用法1： </h3>
+<p>a, b = 1,2</p>
+<p>a, b = *[1,2] </p>
+<p>一样的。分别赋值</p>
+<h3>single splat 用法2： 作为方法的参数，该参数是一个value (注意不是hash)</h3>
+<p>def print_words(*words)<br />&#160; words.each { |word| puts word }<br />end <br />print_words("one", "two", "three", "four")&#160;&#160; <br />会打印所有的参数&#160;&#160; =&gt;&#160; "one", "two", "three", "four"</p>
+<p>表示：</p>
+<p>该参数是个数组，可选，长度无限，不能一个方法的参数中出现两次。</p>
+<p>double splat 用法： 作为方法的参数，该参数是一个hash , 可选</p>
+<p>例如；</p>
+<pre>def foo(a, *b, **c)
+  [a, b, c]
+end
+
+Here's a demo:
+
+&gt; foo 10
+=&gt; [10, [], {}]
+&gt; foo 10, 20, 30
+=&gt; [10, [20, 30], {}]
+&gt; foo 10, 20, 30, d: 40, e: 50
+=&gt; [10, [20, 30], {:d=&gt;40, :e=&gt;50}]
+&gt; foo 10, d: 40, e: 50
+=&gt; [10, [], {:d=&gt;40, :e=&gt;50}]
+</pre>
+<p>可以看出， *b 需要的是 数组&#160; 1,2,3 这样， **c 需要的是一个 hash&#160; ，传入的时候都不需要最外侧的 [] 或者 {}</p>

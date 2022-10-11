@@ -1,0 +1,15 @@
+<p>1. 安装 </p>
+<p>pip install awscli</p>
+<p>2. 登录</p>
+<p>aws configure </p>
+<p>添加对应的pub key, private key </p>
+<p>如何获得 对应的pub key, private key?&#160; （参考：<a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html " target="_blank">https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html</a>&#160; )</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220831_114232.png" /></p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220831_114522.png" /></p>
+<p>然后登陆即可。</p>
+<p>记得s3 的bucket 需要允许ACL的操作：</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220831_142353.png" /></p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220831_142952.png" /></p>
+<p>3. 上传文件到远程</p>
+<p>aws s3 cp --acl public-read-write hihihi s3://your-bucket-site/data/hihihi</p>
+<p>就可以看到了<img src="https://files.sweetysoft.com/blog_images/from_paste_20220831_143208.png" /></p>

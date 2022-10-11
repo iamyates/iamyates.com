@@ -1,0 +1,62 @@
+<p>官方文档：https://web3js.readthedocs.io/en/v1.7.3/web3-eth-contract.html#methods-mymethod-send</p>
+<p>Promievent:&#160; https://github.com/naddison36/promievent</p>
+<p>例如，</p>
+<p>下面的代码：</p>
+<pre>var Contract = require('web3-eth-contract')
+
+run()
+
+async function run(){
+
+  Contract.setProvider('ws://localhost:8545')
+
+  let contractAbi = [{"inputs":[],"name":"getNumber","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"num","type":"uint256"}],"name":"store","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+  let contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+  var contract = new Contract(contractAbi, contractAddress)
+  let from = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+  await contract.methods.getNumber().send({from: from})
+    .then(console.log)
+<br />  await contract.methods.store(333).send({from: from})
+  .once('sent', (payload) =&gt; {
+    console.info("-- in sent..., payload: ", payload)
+  })
+  .once('sending', (payload) =&gt; {
+    console.info("-- in sending..., payload: ", payload)
+  })
+  .once("transactionHash" , (txHash) =&gt; {
+    console.log(`Mining transaction ... network: ${network}, tx: ${txHash}`)
+    // console.log(`https://${network}.etherscan.io/tx/${txhash}`)
+  })
+  .once('receipt', (receipt) =&gt; {
+    console.info("-- in receipt...", receipt)
+    console.log('====== total: ')
+    console.log(receipt)
+    console.log('====== events.Minted: ', receipt.events.Minted)
+    // Success, you've minted the NFT. The transaction is now on chain!
+    console.log(
+        `Success: The NFT has been minted and mined in block ${receipt.blockNumber}`)
+    callback()
+  })
+  .on('confirmation', (confNumber, receipt, lastBlockHash) =&gt; {
+    console.info("-- in confirm...", receipt)
+  })
+  .on('error', (error) =&gt; {
+    console.error(`An error happened: ${error}`)
+    callback()
+  })
+
+  }
+  process.exit()  // 如果是node的话
+
+}</pre>
+<h3>调用之后，他们的顺序是：</h3>
+<p>sent </p>
+<p>sending</p>
+<p>receipt</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220709_103147.png" /></p>
+<h3>contract.method.&lt;my_method&gt;.send 之后，获得对象是：PromiEvents </h3>
+<p>供我们参考的东东（不是官方，但是模仿官方）：https://github.com/naddison36/promievent&#160; </p>
+<h3>once 与 on 的区别：</h3>
+<p>once ： 只运行一次的 callback</p>
+<p>on: 运行好多次</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20220709_103845.png" /></p>
