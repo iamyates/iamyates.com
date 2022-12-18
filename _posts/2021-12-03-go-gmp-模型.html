@@ -1,0 +1,130 @@
+<h1><a name="t1"></a><a id="_1"></a>前言</h1>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;线程数过多，意味着操作系统会不断地切换线程，频繁的上下文切换就成了性能瓶颈。<br> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Golang的调度模型是<a href="https://so.xx.net/so/search?q=GMP&amp;spm=1001.2101.3001.7020" target="_blank" class="hl hl-1" data-report-click="{&quot;spm&quot;:&quot;1001.2101.3001.7020&quot;,&quot;dest&quot;:&quot;https://so.xx.net/so/search?q=GMP&amp;spm=1001.2101.3001.7020&quot;,&quot;extra&quot;:&quot;{\&quot;searchword\&quot;:\&quot;GMP\&quot;}&quot;}" data-tit="GMP" data-pretit="gmp">GMP</a>模型，它提供一种机制，可以在线程中自己实现调度，上下文切换更轻量，从而达到了线程数少，而并发数并不少的效果。而线程中调度的就是Goroutine.</p>
+<blockquote>
+ <p>调度的机制用一句话描述就是：runtime准备好G，M，P，然后M绑定P，M从本地或者是全局队列中获取G，然后切换到G的执行栈上执行G上的任务函数，调用goexit做清理工作并回到M，如此反复</p>
+</blockquote>
+<p>接下来我来分模块介绍一下Golang的GMP模型及创建流程</p>
+<h1><a name="t2"></a><a id="1_Goroutine_8"></a>1. Goroutine调度器的基本概念</h1>
+<p><strong>G(goroutine)</strong></p>
+<ul><li>即Go协程，每个go关键字都会创建一个协程,它存储了goroutine的执行stack信息(运行时栈信息)、goroutine状态以及goroutine的任务函数等</li><li>在G眼中只有P，P就是运行G的 <code>CPU</code></li></ul>
+<p><strong>M(machine)</strong></p>
+<ul><li>工作线程，在Go中称为Machine。</li><li>M是真正调度系统的执行者，它会优先从关联的 P 的本地队列中直接获取中可运行的G，如果本地队列没有的话， 再到调度器持有的全局队列中领取一些任务或是向其他的MP组合偷一半可以执行的G来执行，M 运行 G，G 执行之后，M 会从 P 获取下一个 G，不断重复下去。</li></ul>
+<p><strong>P(processor)</strong></p>
+<ul><li>processor处理器，它包含了运行 goroutine 的资源，</li><li>它用于处理M与G的关系：如果线程想运行 goroutine，必须先获取 P，P 中还包含了可运行的 G 队列</li><li>P的个数在程序启动时决定，默认等同与CPU的核数，通过 <code>runtime.GOMAXPROCS()</code> 设置P的个数</li></ul>
+<blockquote>
+ <p>M必须拥有P才可以执行G中的代码，P含有一个包含多个G的队列，P可以调度G交由M执行</p>
+</blockquote>
+<h1><a name="t3"></a><a id="2_GMP__27"></a>2. GMP 数据结构</h1>
+<blockquote>
+ <p>g、m、p数据结构均在 <code>runtime/runtime2.go</code> 下</p>
+</blockquote>
+<h2><a name="t4"></a><a id="21_G_31"></a>2.1 G</h2>
+<p>g 的关键字段</p>
+<pre data-index="0" class="prettyprint"><code class="prism language-go has-numbering" onclick="mdcp.copyCode(event)" style="position: unset;"><span class="token keyword">type</span> g <span class="token keyword">struct</span> <span class="token punctuation">{<!-- --></span>
+	stack       stack <span class="token comment">// 当前G的栈范围</span>
+	stackguard0 <span class="token builtin">uintptr</span> <span class="token comment">// 判读当前G是否被抢占</span>
+
+	preempt       <span class="token builtin">bool</span> <span class="token comment">// 抢占信号</span>
+	preemptStop   <span class="token builtin">bool</span> <span class="token comment">// 抢占时将状态修改成 `_Gpreempted`</span>
+	preemptShrink <span class="token builtin">bool</span> <span class="token comment">// 在同步安全点收缩栈</span>
+
+	_panic       <span class="token operator">*</span>_panic <span class="token comment">// 最内侧的 panic 结构体</span>
+	_defer       <span class="token operator">*</span>_defer <span class="token comment">// 最内侧的延迟函数结构体</span>
+
+	m              <span class="token operator">*</span>m <span class="token comment">// 当前G占用的线程</span>
+	sched          gobuf <span class="token comment">// 调度相关数据的存储</span>
+	atomicstatus   <span class="token builtin">uint32</span> <span class="token comment">// G的状态</span>
+<span class="token punctuation">}</span>
+<div class="hljs-button {2}" data-title="复制"></div></code><ul class="pre-numbering" style=""><li style="color: rgb(153, 153, 153);">1</li><li style="color: rgb(153, 153, 153);">2</li><li style="color: rgb(153, 153, 153);">3</li><li style="color: rgb(153, 153, 153);">4</li><li style="color: rgb(153, 153, 153);">5</li><li style="color: rgb(153, 153, 153);">6</li><li style="color: rgb(153, 153, 153);">7</li><li style="color: rgb(153, 153, 153);">8</li><li style="color: rgb(153, 153, 153);">9</li><li style="color: rgb(153, 153, 153);">10</li><li style="color: rgb(153, 153, 153);">11</li><li style="color: rgb(153, 153, 153);">12</li><li style="color: rgb(153, 153, 153);">13</li><li style="color: rgb(153, 153, 153);">14</li><li style="color: rgb(153, 153, 153);">15</li></ul></pre>
+<h2><a name="t5"></a><a id="22_M_51"></a>2.2 M</h2>
+<p><strong>m的关键字段</strong></p>
+<ul><li>p最多可以创建10000个线程</li><li>最多只有GOMAXPROCS个活跃线程（与核数一致），这样不会频繁地切换线程上下文</li></ul>
+<pre data-index="1" class="prettyprint"><code class="prism language-go has-numbering" onclick="mdcp.copyCode(event)" style="position: unset;"><span class="token keyword">type</span> m <span class="token keyword">struct</span> <span class="token punctuation">{<!-- --></span>
+	g0   <span class="token operator">*</span>g         <span class="token comment">// 调度栈   使用的G</span>
+	curg <span class="token operator">*</span>g         <span class="token comment">// 当前在M上运行的G</span>
+
+	p      puintptr <span class="token comment">// 正在运行代码的P</span>
+	nextp  puintptr <span class="token comment">// 暂存的P</span>
+	oldp   puintptr <span class="token comment">// 之前使用的P</span>
+<span class="token punctuation">}</span>
+<div class="hljs-button {2}" data-title="复制"></div></code><ul class="pre-numbering" style=""><li style="color: rgb(153, 153, 153);">1</li><li style="color: rgb(153, 153, 153);">2</li><li style="color: rgb(153, 153, 153);">3</li><li style="color: rgb(153, 153, 153);">4</li><li style="color: rgb(153, 153, 153);">5</li><li style="color: rgb(153, 153, 153);">6</li><li style="color: rgb(153, 153, 153);">7</li><li style="color: rgb(153, 153, 153);">8</li></ul></pre>
+<h2><a name="t6"></a><a id="23_P_67"></a>2.3 P</h2>
+<p>p的关键字段</p>
+<pre data-index="2" class="prettyprint"><code class="prism language-go has-numbering" onclick="mdcp.copyCode(event)" style="position: unset;"><span class="token keyword">type</span> p <span class="token keyword">struct</span> <span class="token punctuation">{<!-- --></span>
+	m           muintptr <span class="token comment">// 调度的M</span>
+
+	runqhead <span class="token builtin">uint32</span> <span class="token comment">// G队列头</span>
+	runqtail <span class="token builtin">uint32</span> <span class="token comment">// G队列尾</span>
+	runq     <span class="token punctuation">[</span><span class="token number">256</span><span class="token punctuation">]</span>guintptr <span class="token comment">// G队列</span>
+	runnext guintptr <span class="token comment">// 下一个可运行的G</span>
+
+	status <span class="token builtin">int</span> <span class="token comment">// 当前P的状态</span>
+<span class="token punctuation">}</span>
+<div class="hljs-button {2}" data-title="复制"></div></code><ul class="pre-numbering" style=""><li style="color: rgb(153, 153, 153);">1</li><li style="color: rgb(153, 153, 153);">2</li><li style="color: rgb(153, 153, 153);">3</li><li style="color: rgb(153, 153, 153);">4</li><li style="color: rgb(153, 153, 153);">5</li><li style="color: rgb(153, 153, 153);">6</li><li style="color: rgb(153, 153, 153);">7</li><li style="color: rgb(153, 153, 153);">8</li><li style="color: rgb(153, 153, 153);">9</li><li style="color: rgb(153, 153, 153);">10</li></ul></pre>
+<p>状态取值：</p>
+<ul><li>_Pidle：运行队列为空，没有需要运行的G</li><li>_Prunning：M正在执行用户G</li><li>_Psyscall：M处于系统调用</li><li>_Pgcstop：M处于GC垃圾回收的stop中</li><li>_Pdead：P不再被使用</li></ul>
+<h1><a name="t7"></a><a id="3_M_90"></a>3. M缓冲池</h1>
+<p>在介绍GMP概念的时候说到：P的个数默认等于CPU核数，每个M必须持有一个P才可以执行G，一般情况下M的个数会略大于P的个数，这多出来的M将会在G产生系统调用时发挥作用。类似线程池，Go也提供一个M的池子，需要时从池子中获取，用完放回池子，不够用时就再创建一个。</p>
+<h1><a name="t8"></a><a id="4__93"></a>4. 调度策略</h1>
+<p>复用线程：避免频繁的创建、销毁线程，而是对线程的复用。</p>
+<h2><a name="t9"></a><a id="41_work_stealing_95"></a>4.1 work stealing机制</h2>
+<p>当M没有可运行的 G 时，尝试从其他线程M绑定的 P 偷取一半的G过来，而不是销毁线程。</p>
+<p>work stealing机制触发：当前M线程的P本地队列中没有可运行的G时 并且 全局队列G中也没有可运行的G时，则会执行workstealing机制.</p>
+<p><strong>即：本地队列<span class="katex--inline"><span class="katex"><span class="katex-mathml">
+
+
+
+
+         →
+
+
+
+        \rightarrow
+
+
+     </span><span class="katex-html"><span class="base"><span class="strut" style="height: 0.3669em;"></span><span class="mrel">→</span></span></span></span></span>全局队列<span class="katex--inline"><span class="katex"><span class="katex-mathml">
+
+
+
+
+         →
+
+
+
+        \rightarrow
+
+
+     </span><span class="katex-html"><span class="base"><span class="strut" style="height: 0.3669em;"></span><span class="mrel">→</span></span></span></span></span>窃取</strong></p>
+<h2><a name="t10"></a><a id="42_hand_off__102"></a>4.2 hand off 机制</h2>
+<p>当M阻塞时，M释放绑定的 P（MP分离），把 P 转移给其他空闲的线程执行。</p>
+<h2><a name="t11"></a><a id="43__104"></a>4.3 抢占</h2>
+<p>在 coroutine 中要等待一个<a href="https://so.xx.net/so/search?q=%E5%8D%8F%E7%A8%8B&amp;spm=1001.2101.3001.7020" target="_blank" class="hl hl-1" data-report-click="{&quot;spm&quot;:&quot;1001.2101.3001.7020&quot;,&quot;dest&quot;:&quot;https://so.xx.net/so/search?q=%E5%8D%8F%E7%A8%8B&amp;spm=1001.2101.3001.7020&quot;,&quot;extra&quot;:&quot;{\&quot;searchword\&quot;:\&quot;协程\&quot;}&quot;}" data-tit="协程" data-pretit="协程">协程</a>主动让出 CPU 才执行下一个协程，在 Go 中，一个 goroutine 执行的时间不能超过 10ms，防止其他 goroutine 被饿死。</p>
+<h2><a name="t12"></a><a id="44__106"></a>4.4 阻塞的两种情况</h2>
+<p><strong>用户态阻塞/唤醒</strong><br> 例如网络IO、阻塞式channel、sleep等场景(简单来说就是CPU这时候对于这个协程没有事情要做)，对于这类阻塞会将G暂时挂起到某一临时等待队列中，待阻塞结束后重新寻找P放入。</p>
+<p><strong>系统调用阻塞</strong><br> M 执行某一个 G 时，如果发生系统调用或则其余阻塞操作，M 会阻塞，如果当前有 G 在执行，runtime 会将这个 MP 进行分离，如果有空闲的M就用或者是从线程池中取，如果没有就创建一个新的M 来服务于这个 P；</p>
+<p>当 M 系统调用结束时候，这个 G 会尝试获取一个空闲的 P 执行，并放入到这个 P 的本地队列。如果获取不到 P，那么这个线程 M 变成休眠状态， 加入到空闲线程中，然后这个 G 会被放入全局队列中</p>
+<h2><a name="t13"></a><a id="45__116"></a>4.5 拓展</h2>
+<p><strong>判定阻塞的原理：</strong></p>
+<p>go程序启动时会首先创建一个特殊的内核线程 sysmon，用来监控和管理，其内部是一个循环：</p>
+<p>记录所有 P 的 G 任务的计数 schedtick，schedtick会在每执行一个G任务后递增</p>
+<p>如果检查到 schedtick 一直没有递增，说明这个 P 一直在执行同一个 G 任务，如果超过10ms，就在这个G任务的栈信息里面加一个 tag 标记</p>
+<p>然后这个 G 任务在执行的时候，如果遇到非<a href="https://so.xx.net/so/search?q=%E5%86%85%E8%81%94%E5%87%BD%E6%95%B0&amp;spm=1001.2101.3001.7020" target="_blank" class="hl hl-1" data-report-click="{&quot;spm&quot;:&quot;1001.2101.3001.7020&quot;,&quot;dest&quot;:&quot;https://so.xx.net/so/search?q=%E5%86%85%E8%81%94%E5%87%BD%E6%95%B0&amp;spm=1001.2101.3001.7020&quot;,&quot;extra&quot;:&quot;{\&quot;searchword\&quot;:\&quot;内联函数\&quot;}&quot;}" data-tit="内联函数" data-pretit="内联函数">内联函数</a>调用，就会检查一次这个标记，然后中断自己，把自己加到队列末尾，执行下一个G</p>
+<p>如果没有遇到非内联函数 调用的话，那就会一直执行这个G任务，直到它自己结束；如果是个死循环，并且 GOMAXPROCS=1 的话。那么一直只会只有一个 P 与一个 M，且队列中的其他 G 不会被执行！</p>
+<h1><a name="t14"></a><a id="5_go_func_129"></a>5. go func()调度流程</h1>
+<p>下方图片转自Go夜读 go<br> <img src="https://img-blog.xximg.cn/a9400d6b27174796b1ea659000e948d8.png" alt="在这里插入图片描述"></p>
+<ol><li>使用go关键子创建一个G，写法：<code>go func(){}</code></li><li>将G放入P的本地队列(如果当前M绑定的P的本地队列满了，会放在全局队列中)</li><li>唤醒或者新建M来执行任务</li><li>进入调度循环(M 运行 G，G 执行之后，M 会从 P 获取下一个 G，不断重复下去；)</li><li>尽力获取可执行的G，并执行(如果p本地队列没有可运行的G时，会去全局队列中拿取一半的，如果全局队列中也没有，则会进行执行work stealing机制，会随机的去另一个线程M中的P本地队列偷取一半的G来运行)</li><li>清理现场并重新进入调度循环</li></ol>
+<h1><a name="t15"></a><a id="6_PM_141"></a>6. P和M的个数</h1>
+<h2><a name="t16"></a><a id="61_P_142"></a>6.1 P的数量</h2>
+<p>P的数量会由启动时环境变量$GOMAXPROCS 或是runtime的方法 GOMAXPROCS()来设定</p>
+<h2><a name="t17"></a><a id="62_M_144"></a>6.2 M的数量</h2>
+<ul><li>go程序启动时默认的M的最大数量为 10000</li><li>runtime/debug 中的 SetMaxThreads 函数，设置 M 的最大数量</li><li>当某个M阻塞了，会创建新得的M</li></ul>
+<h2><a name="t18"></a><a id="63_PM_150"></a>6.3 P和M什么时候会被创建</h2>
+<ol><li>P：在确定了P的最大数量为n的时候,运行时系统会根据这个n创建n个P</li><li>M：当的M都阻塞了，但是绑定的P中还有很多就绪任务G，这时会去寻找空闲的M或者去线程池中找，且找不到空闲的M的情况下会创建新的M</li></ol>
+<h2><a name="t19"></a><a id="64__155"></a>6.4 问题？</h2>
+<blockquote>
+ <p>问题来自B战评论</p>
+</blockquote>
+<p>整体的逻辑与单线程调度器没有太多区别，因为我们的程序中可能同时存在多个活跃线程，所以多线程调度器引入了 GOMAXPROCS 变量帮助我们灵活控制程序中的最大处理器数，即活跃线程数。</p>
+<p><strong>这个GOMAXPROCS 到底是 P的个数，还是M的个数呢？</strong></p>
+<p>答：GOMAXPROCS是限制P的个数，你可以理解成M是线程，P是M需要执行G的时候需要持有的局部资源，只有M持有P的时候才有局部资源可以执行G。注意，也存在M持有G但是不持有P的情况，这时候一般是由于M持有P执行G的时候陷入了长时间的系统调用，被系统监控sysmon发现后将P夺走，将P给另一个M用来继续执行其他G，被夺走P的M此时陷入系统调用，不使用CPU了，也不执行G。因此，总体上可以这么认为，M如果需要访问CPU资源，那么就需要持有P，同时有多少个CPU核心，那么就有多少个P，同时也就有多少个M可以使用CPU。</p>
+
