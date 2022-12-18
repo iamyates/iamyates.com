@@ -18,7 +18,7 @@ $ bundle exec jekyll serve --host 0.0.0.0
 ## 使用
 
 
-在文章都写在 `_site`, 命名为 `2022-01-01-title`这样。
+在文章都写在 `_posts`, 命名为 `2022-01-01-title`这样。
 
 ```
  2022-03-10-postgres-from-to-column.html
