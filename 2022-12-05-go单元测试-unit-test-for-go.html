@@ -1,0 +1,67 @@
+<p data-pid="jNlK-4Ou">单元测试，一个不断被强调，但又不断被忽略的话题，从一名码农成长为一名优秀的工程师，单元测试，是必不可少的技能。单元测试是在所有测试环节中最先完成的，在我们写代码的过程中就需要写单元测试，也可能在未写代码前先写测试。个人认为编码能力，代码评审和单元测试是一个研发同学必备的三大重要技能。</p>
+<figure data-size="normal"><noscript>
+<img src="https://pic4.zhimg.com/v2-b7e0f708a42f2775d8234206aa8d908f_b.jpg" data-caption="" data-size="normal" data-rawwidth="700" data-rawheight="357" class="origin_image zh-lightbox-thumb" width="700" data-original="https://pic4.zhimg.com/v2-b7e0f708a42f2775d8234206aa8d908f_r.jpg"/></noscript><div><img src="https://pic4.zhimg.com/80/v2-b7e0f708a42f2775d8234206aa8d908f_720w.jpg" data-caption="" data-size="normal" data-rawwidth="700" data-rawheight="357" class="origin_image zh-lightbox-thumb lazy" data-original="https://pic4.zhimg.com/v2-b7e0f708a42f2775d8234206aa8d908f_r.jpg" data-actualsrc="https://pic4.zhimg.com/v2-b7e0f708a42f2775d8234206aa8d908f_b.jpg" data-lazy-status="ok" width="700" height="357"></div></figure><h2>为什么要写单元测试？</h2><p data-pid="SypwpjNq">关于为什么要写单元测试，这里有不同的声音。</p><blockquote data-pid="VcjLNb8h">公司对单测覆盖率有要求，不达标代码无法通过集成测试，能不写嘛<br>单元测试被纳入绩效考核的指标了，必须得写呀<br>总得要自测下自己代码的正确性吧，不写心里不踏实呀<br>这不是默认的编码规范吗，还需要理由嘛？<br>你是RD嘛，这么重要的事还要问为什么？<br>单元测试不是测试同学写的吗？</blockquote><p data-pid="GskiuIAh">不管声音是哪一种，单元测试无疑是有意义的，单元测试的意义主要从两个方面分析：</p><h3>质量</h3><p data-pid="c83Bcew0">单元测试针对一个具体的函数或方法，排除其他模块的干扰，更容易发现问题</p><p data-pid="QiaILXMC">对于单个函数，更容易构造测试case，核心功能验证更加充分</p><p data-pid="g_qpyMvL">单元测试促使研发者深入思考代码设计和编写逻辑，及时纠偏</p><p data-pid="JYqlUCqP">以上都有利于写出更高质量的代码</p><h3>效率</h3><p data-pid="wOnCR_E5"><b>提高代码可读性，降低理解成本：</b>清晰的单元测试能够在不了解代码主要逻辑的情况下明确函数的功能以及关键输入输出。</p><p data-pid="gwjax3Wx"><b>降低调试成本：</b>单元测试足够小，且case充分的情况下，会极大的缩短调试的时间，不需要再深入到函数内部一步步排查。</p><p data-pid="lfsnRt5B"><b>降低代码修改成本：</b>在迭代开发过程中，难免会对以前的代码进行修改或者是重构，有个单元测试，做修改后能够及时验证是否对其他模块乃至整个系统有影响，及早发现问题，规避风险。同时只需要针对修改内容进行测试，研发效率相应提升。</p><p data-pid="0SmZXr1D"><b>缩短开发周期</b>：尽早的发现bug，尽早修复，可以大大的缩短开发周期并且降低运维成本；</p><h2>什么是单元测试？</h2><p data-pid="34kH4lFc"><b>单元</b>是应用的最小可测试部件。在过程化编程中，一个单元就是单个程序、函数、过程等；对于面向对象编程，最小单元就是方法，包括基类、超类、抽象类等中的方法。<b>单元测试</b>就是软件开发中对最小单位进行正确性检验的测试工作。</p><p data-pid="kgZecTYq">不同地方对单元测试有的定义可能会有所不同，但有一些基本共识：</p><ul><li data-pid="5NyXx4MC">单元测试是比较<b>底层</b>的，关注代码的<b>局部</b>而不是整体。</li><li data-pid="-XWA7Qa2">单元测试是<b>开发人员</b>在写代码时候写的。</li><li data-pid="zsUOyHWc">单元测试需要比其他测试模块先运行。</li></ul><p data-pid="IAcBMYex">通常而言，一个单元测试的用例主要是用于判断<b>在某个特定条件或者说某个特定场景下对于某个特定函数</b>的一个行为。我们一般的感受是就是说针对一个函数需要构造不同的输入，然后验证这个函数的输出是否符合预期。这里要强调一点的是，对于输入的话有时候不仅仅是显示的，也有可能是隐式的，比如我们的函数可能没有任何的参数传入，但它有可能会读取我们的配置文件等其他数据源内容</p><p data-pid="zmX7IA-o">在讲了单元测试的意义和基本概念后，以Go语言为例，看看实际如何进行单元测试。</p><p data-pid="QlFPWq3e">先从一个简单的Test例子开始吧！</p><p data-pid="ekTCCIwT">基础写法：</p><ul><li data-pid="O-Jlqxyy">文件格式:  以_test.go为后缀，源文件在执行go build时不会被构建成包的一部分，测试文件和函数的文件放在一个包下。</li><li data-pid="6OF3PFAf">函数格式：每个测试的函数都是以Test为函数名的前缀</li><li data-pid="OI6dSYFa">函数都必须导入testing包（<a href="https://link.zhihu.com/?target=http%3A//cngolib.com/testing.html" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">Go 官方的testing包</a>）</li></ul><div class="highlight"><pre><code class="language-text">func TestAbs(t *testing.T) {
+    got := Abs(-1)
+    if got != 1 {
+        t.Errorf("Abs(-1) = %d; want 1", got)
+    }
+}</code></pre></div>
+
+<h2>Go常用测试框架</h2><table data-draft-node="block" data-draft-type="table" data-size="normal" data-row-style="normal"><tbody><tr><th>框架名称</th><th>特征</th><th>优点</th><th>缺点</th><th>备注</th></tr><tr><td>Testing</td><td>table-driver测试<br>支持基准测试</td><td>Go原生<br>简单易用</td><td>不支持mock<br>不支持assert</td><td>testing包文档：<br><a href="https://link.zhihu.com/?target=http%3A//cngolib.com/testing.html" class=" external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043"><span class="invisible">http://</span><span class="visible">cngolib.com/testing.htm</span><span class="invisible">l</span><span class="ellipsis"></span></a></td></tr><tr><td>Testify</td><td>table-driver测试<br><br>支持mock<br>支持assert<br><br>兼容go test</td><td>支持assert，功能强大易用<br>支持mock<br>兼容go test<br>社区活跃度高</td><td>mock能力较弱</td><td>官方文档：<a href="https://link.zhihu.com/?target=https%3A//pkg.go.dev/github.com/stretchr/testify" class=" external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043"><span class="invisible">https://</span><span class="visible">pkg.go.dev/github.com/s</span><span class="invisible">tretchr/testify</span><span class="ellipsis"></span></a></td></tr><tr><td>GoConvey</td><td>支持assert<br><br>支持web界面<br>支持colorized输出<br>支持测试用例层级嵌套<br>兼容go test</td><td>支持web界面<br>支持colorized输出<br>支持测试用例层级嵌套</td><td>不支持mock<br>社区不太活跃</td><td>项目地址：<br><a href="https://link.zhihu.com/?target=https%3A//github.com/smartystreets/goconvey" class=" external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043"><span class="invisible">https://</span><span class="visible">github.com/smartystreet</span><span class="invisible">s/goconvey</span><span class="ellipsis"></span></a><br><br>安装：go get <a href="https://link.zhihu.com/?target=http%3A//github.com/smartystreets/goconvey" class=" external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043"><span class="invisible">http://</span><span class="visible">github.com/smartystreet</span><span class="invisible">s/goconvey</span><span class="ellipsis"></span></a></td></tr><tr><td>Ginkgo</td><td>支持基准测试<br>支持并发测试<br>兼容go test</td><td>支持并发测试</td><td></td><td>手册：<a href="https://link.zhihu.com/?target=https%3A//www.ginkgo.wiki/" class=" external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043"><span class="invisible">https://www.</span><span class="visible">ginkgo.wiki/</span><span class="invisible"></span></a><br>安装：<br>go get <a href="https://link.zhihu.com/?target=http%3A//github.com/onsi/ginkgo/ginkgo" class=" external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043"><span class="invisible">http://</span><span class="visible">github.com/onsi/ginkgo/</span><span class="invisible">ginkgo</span><span class="ellipsis"></span></a></td></tr></tbody></table><h2>Mock</h2><p data-pid="8nPRL5Ie">在写单测过程中，常会遇到有些不容易构造或者不容易获取的对象，这时候我们要创建一个虚拟的对象以便测试。</p><p data-pid="tWkyPZVg">常用的Mock可以归纳为两类：</p><h3>打桩Stub</h3><p data-pid="JiBPRGz6">代表框架：GoMonkey、monkey、GoStub</p><p data-pid="VLueCrQ1">主要通过打补丁（Patch）的方式替换函数、方法、变量等等</p><div class="highlight"><pre><code class="language-text">	monkey.PatchInstanceMethod(reflect.TypeOf(personService), "GetPersonById", func(_ *PersonServiceImpl, _ string) (*Person, error) {
+		return &amp;Person{
+			Name: "test_name",
+		}, nil
+	})</code></pre></div><h3>依赖注入+GoMock</h3><p data-pid="gecMCHft">这种方法要求业务代码必须以“依赖倒置”的方式实现。关于什么是“依赖倒置原则”，参考官方的定义：</p><ol><li data-pid="t36vgR7F">高层模块不应该依赖底层模块，两个都应该依赖抽象。</li><li data-pid="IwzPm-Wy">抽象不应该依赖细节，细节应该依赖抽象。“抽象”是指接口（interface）或者抽象类（abstract class），“细节”指的是实现（struct或者class）。</li></ol><p data-pid="Msy4mFFS">举例来说，比如在业务层我们会定义一些接口，如获取用户信息：</p><div class="highlight"><pre><code class="language-text">type UserStorager interface {
+	GetUserInfo(context.Context, *UserParam) (User, error)
+}</code></pre></div><p data-pid="xTB1JzPH">对于这些接口使用gomock进行模拟，通过mockgen -source=user.go -destination=user_mock.go 可自动生成接口应的mock实现</p><div class="highlight"><pre><code class="language-text">// Code generated by MockGen. DO NOT EDIT.
+// Source: user.go
+
+// Package mock_user is a generated GoMock package.
+package mock_user
+
+import (
+	context "context"
+	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
+	ibasic "icode.baidu.com/baidu/bfe-private-cloud/control-api/api-server/module/ibasic"
+)
+
+// MockUserStorager is a mock of UserStorager interface.
+type MockUserStorager struct {
+	ctrl     *gomock.Controller
+	recorder *MockUserStoragerMockRecorder
+}
+
+// MockUserStoragerMockRecorder is the mock recorder for MockUserStorager.
+type MockUserStoragerMockRecorder struct {
+	mock *MockUserStorager
+}
+
+// NewMockUserStorager creates a new mock instance.
+func NewMockUserStorager(ctrl *gomock.Controller) *MockUserStorager {
+	mock := &amp;MockUserStorager{ctrl: ctrl}
+	mock.recorder = &amp;MockUserStoragerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUserStorager) EXPECT() *MockUserStoragerMockRecorder {
+	return m.recorder
+}
+
+// GetUserInfo mocks base method.
+func (m *MockUserStorager) GetUserInfo(arg0 context.Context, arg1 *ibasic.UserParam) (ibasic.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserInfo", arg0, arg1)
+	ret0, _ := ret[0].(ibasic.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserInfo indicates an expected call of GetUserInfo.
+func (mr *MockUserStoragerMockRecorder) GetUserInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockUserStorager)(nil).GetUserInfo), arg0, arg1)
+}
+</code></pre></div>
