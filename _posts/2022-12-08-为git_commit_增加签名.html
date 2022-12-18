@@ -1,0 +1,15 @@
+<p>refer to:&#160; <a href="https://gist.github.com/ankurk91/c4f0e23d76ef868b139f3c28bde057fc">https://gist.github.com/ankurk91/c4f0e23d76ef868b139f3c28bde057fc</a>&#160;</p>
+<a href="https://www.linuxjournal.com/content/signing-git-commits">https://www.linuxjournal.com/content/signing-git-commits</a>
+<p>1. 创建一个新的gpg:&#160;</p>
+<p># Ubuntu<br />sudo apt-get install gpa seahorse<br /># MacOS with https://brew.sh/<br />brew install gpg</p>
+<p>2. 生成:&#160;gpg --gen-key</p>
+<p>3. 列出来:</p>
+<p>gpg --list-secret-keys --keyid-format LONG</p>
+<pre>/home/siwei/.gnupg/pubring.kbx
+------------------------------
+sec   rsa3072 2022-11-24 [SC] [expires: 2024-11-23]
+      6C2C2BD583316484B50A163E087CE354F6E0328C
+uid           [ultimate] xx &lt;xx@sina.com&gt;
+ssb   rsa3072 2022-11-24 [E] [expires: 2024-11-23]
+
+</pre>
