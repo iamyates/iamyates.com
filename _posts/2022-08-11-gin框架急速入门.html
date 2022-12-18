@@ -1,0 +1,65 @@
+<h3>&#160;安装go</h3>
+<p>go 1.17&#160;&#160; ( 下载tar, 编译) </p>
+<p> 1870  tar zxvf go1.17.linux-amd64.tar.gz go<br /> 1871  mv go /usr/local/<br /> 1872  sudo mv go /usr/local/</p>
+<p>export PATH=$PATH:/usr/local/go/bin</p>
+<p>查看环境:&#160; $ go env </p>
+<h3>修改代理:</h3>
+<p>export GOPROXY=https://goproxy.cn</p>
+<h3>安装gin</h3>
+<p>参考： https://github.com/gin-gonic/gin</p>
+<p>go get -u github.com/gin-gonic/gin</p>
+<p>vim server.go </p>
+<pre>package main
+import "github.com/gin-gonic/gin"
+
+func main() {
+  r := gin.Default()
+  r.GET("/hi", func(c *gin.Context) {
+    c.JSON(200, gin.H {
+      "message": "lueluelue",
+    })
+  })
+	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}</pre>
+<p>运行：&#160; $ go run server.go&#160; </p>
+<p>即可。 </p>
+<p>性能超好，在虚拟机上， 7000 req/s </p>
+<h3>带上参数：</h3>
+<pre>package main
+import "github.com/gin-gonic/gin"
+import "net/http"
+
+func main() {
+  router := gin.Default()
+  router.GET("/user/:name", func(c *gin.Context){
+    name := c.Param("name")
+    c.String(http.StatusOK, "Hihihi , %s", name)
+  })
+
+  router.GET("/book/show", func(c *gin.Context){
+    name := c.Query("name")
+    year := c.Query("year")
+    c.String(http.StatusOK, "show me this booK: %s %s", name, year)
+  })
+
+  router.Run(":8080")
+}</pre>
+<h3>带上POST参数：</h3>
+<pre>package main
+
+import "github.com/gin-gonic/gin"
+//import "net/http"
+
+func main(){
+  router := gin.Default()
+  router.POST("/book/create", func(c *gin.Context){
+    c.JSON(200, gin.H {
+      "name": c.PostForm("name"),
+      "author": c.PostForm("author"),     // 注意这个 , 不能省略
+    })
+  })
+  router.Run(":8080")
+}
+
+</pre>
+

@@ -1,0 +1,25 @@
+<span class="hljs-keyword">package</span> main
+import (
+  <span class="hljs-string">"fmt"</span>
+  <span class="hljs-string">"os/exec"</span>
+)
+
+func main(){
+  <span class="hljs-regexp">//for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">1502</span>; i++ {
+  <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">3</span>; i++ {
+    command := <span class="hljs-string">"aws s3 cp --acl public-read-write nft/parachain/"</span> + fmt.Sprintf(<span class="hljs-string">"<span class="hljs-variable">%v</span>"</span>, i) + <span class="hljs-string">" s3://nft-data.raindrop.link/nft/parastate/"</span> + fmt.Sprintf(<span class="hljs-string">"<span class="hljs-variable">%v</span>"</span>, i)
+
+
+    fmt.Println(<span class="hljs-string">"== executing command: <span class="hljs-variable">%s</span> \n"</span>, command)
+    // 这里每个参数都要有个空格  <br>    // fmt.Sprintf(<span class="hljs-string">"<span class="hljs-variable">%v</span>"</span>, <span class="hljs-number">3</span>) 就是把数字转换成String
+    out, err := <span class="hljs-keyword">exec</span>.Command(<span class="hljs-string">"aws"</span>, <span class="hljs-string">"s3"</span>, <span class="hljs-string">"cp"</span>, <span class="hljs-string">"--acl"</span>, <span class="hljs-string">"public-read-write"</span>,
+      <span class="hljs-string">"nft/parachain/"</span> + fmt.Sprintf(<span class="hljs-string">"<span class="hljs-variable">%v</span>"</span>, i), <span class="hljs-string">"s3://nft-data.raindrop.link/nft/parastate/"</span> + fmt.Sprintf(<span class="hljs-string">"<span class="hljs-variable">%v</span>"</span>, i)).Output()
+
+    <span class="hljs-keyword">if</span> err != nil {
+      fmt.Printf(<span class="hljs-string">" ERROR: <span class="hljs-variable">%s</span>"</span>, err)
+    }<span class="hljs-keyword">else</span>{
+      fmt.Printf(<span class="hljs-string">" OK: <span class="hljs-variable">%s</span>"</span>, out)
+    }
+  }
+}
+

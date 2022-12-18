@@ -1,0 +1,41 @@
+<p>参考: https://stackoverflow.com/questions/15049903/how-to-use-custom-packages</p>
+<p>go 默认是从github.com上引用的.不过由于种种原因,这个不符合我国国情</p>
+<p>而且我们开发的时候都要从本地引入</p>
+<p>方法五花八门,版本也各有区别</p>
+<p>所以,我们简单一些:</p>
+<p>1. 创建一个文件夹,&#160; $ mkdir test_go_mod</p>
+<p>$ cd test_go_mod</p>
+<p>$ go mod init test_go_mod (这里指明 该package 跟所在目录文件名一样)</p>
+<p>$ go mod tidy</p>
+<p>然后,我们创建一个main.go文件:</p>
+<pre>package main
+
+import (
+  "fmt"
+  "test_go_mod/kaka"
+)
+
+func main(){
+
+  fmt.Println("lalala")
+  kaka.Say()
+}
+</pre>
+<p>同时, 创建 kaka/kaka.go </p>
+<pre>$ cat kaka/kaka.go
+package kaka
+
+func Say() string{
+  return "hihihi"
+}
+
+</pre>
+<p> 最后.我们看一下 test_go_mod/go.mod 文件 (不用修改它) </p>
+<pre>module test_go_mod
+
+go 1.17
+</pre>
+<p>最后,回顾一下当前文件夹路径( 一定要留意main.go所在的文件夹名称)</p>
+<p>test_go_mod/<br />test_go_mod/kaka<br />test_go_mod/kaka/kaka.go<br />test_go_mod/go.mod<br />test_go_mod/main.go</p>
+<pre>最后,就可以使用了.</pre>
+<p>/workspace/test_go_mod$ go run main.go <br />lalala</p>
