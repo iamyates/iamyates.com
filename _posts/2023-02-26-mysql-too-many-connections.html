@@ -1,0 +1,13 @@
+<p>refer to: <br /><a href="https://www.thegeekdiary.com/mysql-error-too-many-connections-and-how-to-resolve-it/ " target="_blank">https://www.thegeekdiary.com/mysql-error-too-many-connections-and-how-to-resolve-it/</a>
+</p>
+<p>This error is caused by mysql, but not rails config.</p>
+<p>    check variable: max_connections:</p>
+<pre>SHOW VARIABLES LIKE 'max_connections';
++-----------------+-------+
+| Variable_name   | Value |
++-----------------+-------+
+| max_connections | 151   |
++-----------------+-------+
+
+</pre>
+<p>    increase it : SET GLOBAL max_connections = 1024;</p>

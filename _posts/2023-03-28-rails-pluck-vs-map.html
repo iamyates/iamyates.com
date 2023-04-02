@@ -1,0 +1,10 @@
+<p>refer to:&#160; <a href="https://stackoverflow.com/questions/45347317/which-one-is-faster-between-map-collect-select-and-pluck">https://stackoverflow.com/questions/45347317/which-one-is-faster-between-map-collect-select-and-pluck</a>
+</p>
+<p>pluck:&#160; pick 1 attribute from array</p>
+<p>map: re-implement your function</p>
+<p>my_array.map(&amp;:id)</p>
+<p>my_array.pluck(:id)&#160;</p>
+<p>the same.&#160; pluck faster than map</p>
+<pre>XXTransaction Pluck (0.3ms)  SELECT "xx_transactions"."id" FROM "xx_transactions" WHERE "xx_transactions"."id" = $1  [["id", 18068574]]
+XXTransaction Load (0.5ms)  SELECT "xx_transactions".* FROM "xx_transactions" WHERE "xx_transactions"."id" = $1  [["id", 18068574]]
+</pre>

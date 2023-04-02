@@ -1,0 +1,12 @@
+
+<p>refer to: <br /><a href="https://github.com/vinsol-spree-contrib/spree_themes/issues/26 " target="_blank">https://github.com/vinsol-spree-contrib/spree_themes/issues/26</a>
+</p>
+<h3>issue description</h3>
+<p> Mysql2::Error: Data too long for column 'nmap_result' at row 1 (ActiveRecord::ValueTooLong)<br />	from /home/yates/.asdf/installs/ruby/3.0.3/lib/ruby/gems/3.0.0/gems/mysql2-0.5.5/lib/mysql2/client.rb:151:in `block in query'<br />	from /home/yates/.asdf/installs/ruby/3.0.3/lib/ruby/gems/3.0.0/gems/mysql2-0.5.5/lib/mysql2/client.rb:150:in `handle_interrupt'<br />	from /home/yates/.asdf/installs/ruby/3.0.3/lib/ruby/gems/3.0.0/gems/mysql2-0.5.5/lib/mysql2/client.rb:150:in `query'</p>
+<p>The field `nmap_result` is text </p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20230216_090417.png" /></p>
+<h3>solution</h3>
+<p>change it from text to longtext</p>
+<p>ruby code:&#160; migration: change_column :table, :column_name, :longtext</p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20230216_090509.png" /></p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20230216_090543.png" /></p>

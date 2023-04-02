@@ -1,0 +1,11 @@
+<p>1. 无法根据redis来准确删除某个任务，隐藏的特别深，只能使用flushall</p>
+<p>2. 网上的策略都不好使，例如：</p>
+<a href="https://stackoverflow.com/questions/25889699/sidekiq-stop-one-single-running-job">https://stackoverflow.com/questions/25889699/sidekiq-stop-one-single-running-job</a>
+<br />
+<a href="https://stackoverflow.com/questions/48348723/sidekiq-list-all-jobs-queued-running">https://stackoverflow.com/questions/48348723/sidekiq-list-all-jobs-queued-running</a>
+<br />
+<a href="https://stackoverflow.com/questions/12268008/how-to-find-and-kill-a-running-resque-job-on-rails">https://stackoverflow.com/questions/12268008/how-to-find-and-kill-a-running-resque-job-on-rails</a>
+<p>安装crontab:&#160; apt install cron</p>
+<p>不过sidekiq cron还是由ruby代码控制的，不是crontab -e&#160;</p>
+<p>3. 这里是具体的细节：&#160; <a href="https://stackoverflow.com/questions/68866897/where-or-how-does-sidekiq-redis-store-an-object-when-a-job-is-retrying">https://stackoverflow.com/questions/68866897/where-or-how-does-sidekiq-redis-store-an-object-when-a-job-is-retrying</a>
+</p>

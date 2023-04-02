@@ -1,0 +1,18 @@
+<p>refer to: <br /><a href="https://stackoverflow.com/questions/22464011/mysql2error-incorrect-string-value " target="_blank">https://stackoverflow.com/questions/22464011/mysql2error-incorrect-string-value</a>
+</p>
+<p>1. change your&#160; database.yml: </p>
+<pre>development:
+  adapter: mysql2
+  database: db
+  username:
+  password:
+  encoding: utf8mb4
+  collation: utf8mb4_unicode_ci
+</pre>
+
+<p>2.run this SQL ( change YOUR_XX_NAME )</p>
+<pre>ALTER TABLE `YOUR_TABLE_NAME`
+  CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+MODIFY YOUR_COLUMN_NAME VARCHAR(250)
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_bin
+</pre>

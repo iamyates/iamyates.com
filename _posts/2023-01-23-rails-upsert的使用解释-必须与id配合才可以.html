@@ -1,0 +1,40 @@
+<p>refer to :&#160;</p>
+<p><a href="https://stackoverflow.com/questions/4695563/upsert-in-rails-activerecord " target="_blank">https://stackoverflow.com/questions/4695563/upsert-in-rails-activerecord</a>
+</p>
+<p>
+<a href="https://stackoverflow.com/questions/58759765/how-does-the-upsert-function-in-rails-work " target="_blank">https://stackoverflow.com/questions/58759765/how-does-the-upsert-function-in-rails-work</a>
+</p>
+<p><a href="https://apidock.com/rails/v6.0.0/ActiveRecord/Persistence/ClassMethods/upsert " target="_blank">https://apidock.com/rails/v6.0.0/ActiveRecord/Persistence/ClassMethods/upsert</a>
+</p>
+<p>作用： 根据传入的参数中的id, 来判断数据库中是否具备同样的id 的记录，如果存在则更新，如果不存在则插入.</p>
+<p>例如: 有个model,&#160; 具备3个属性：&#160; id,&#160; author_name, title </p>
+<p>[1] pry(main)&gt; Book.all&#160; </p>
+<p># =&gt; []&#160;&#160;&#160;&#160;&#160; 最开始时无记录</p>
+<p>使用upsert: </p>
+<p><img src="https://files.sweetysoft.com/blog_images/from_paste_20230130_090540.png" /></p>
+
+<p>原始过程为：</p>
+<pre>[2] pry(main)&gt; Book.upsert author_name: '刘慈欣', title: '三体1'  // 可以看出报错了
+ArgumentError: wrong number of arguments (given 0, expected 1)
+from /home/yates/.asdf/installs/ruby/3.1.2/lib/ruby/gems/3.1.0/gems/activerecord-7.0.4/lib/active_record/persistence.rb:222:in `upsert'
+[3] pry(main)&gt; Book.upsert {author_name: '刘慈欣', title: '三体1'}  // 还是报错
+SyntaxError: unexpected ':', expecting '}'
+Book.upsert {author_name: '刘慈欣', title: '三体1...
+                        ^
+SyntaxError: unexpected ',', expecting end-of-input
+...sert {author_name: '刘慈欣', title: '三体1'}
+...                              ^
+[3] pry(main)&gt; Book.upsert({author_name: '刘慈欣', title: '三体1'})  // 使用完整形式就没问题了。
+  Book Upsert (3.4ms)  INSERT INTO "books" ("author_name","title","created_at","updated_at") VALUES ('刘慈欣', '三体1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT ("id") DO UPDATE SET updated_at=(CASE WHEN ("books"."author_name" IS NOT DISTINCT FROM excluded."author_name" AND "books"."title" IS NOT DISTINCT FROM excluded."title") THEN "books".updated_at ELSE CURRENT_TIMESTAMP END),"author_name"=excluded."author_name","title"=excluded."title" RETURNING "id"
+=&gt; #&lt;ActiveRecord::Result:0x00007f7f574e6050 @column_types={}, @columns=["id"], @hash_rows=nil, @rows=[[1]]&gt;
+[4] pry(main)&gt; Book.all
+  Book Load (0.9ms)  SELECT "books".* FROM "books"
+=&gt; [#&lt;Book:0x00007f7f57498530
+  id: 1,
+  author_name: "刘慈欣",
+  title: "三体1",
+  created_at: Mon, 30 Jan 2023 08:59:28.514813000 CST +08:00,
+  updated_at: Mon, 30 Jan 2023 08:59:28.514813000 CST +08:00&gt;]</pre>
+<p>所以结论为：</p>
+<p>1. upsert 传入的hash中，必须存在一个attribute, 对应数据库中的unique column</p>
+<p>2. 该函数会跳过 model validation , call backs</p>

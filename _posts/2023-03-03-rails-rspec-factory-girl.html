@@ -1,0 +1,7 @@
+<p>例子，如果某个model对应的factory定义为：</p>
+<p>factory&#160; :tx do<br />&#160;&#160; block<br />end</p>
+<p>block为一个独立的model,&#160; tx belongs_to block</p>
+<p>那么，在创建的该tx的时候，我们应该：</p>
+<pre>create :tx, block: Block.new</pre>
+<p>不应该这样调用:&#160;&#160;</p>
+<pre>create :tx, block_id: 3</pre>
